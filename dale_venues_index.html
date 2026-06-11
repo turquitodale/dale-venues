@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dale.venues</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --bg:#0B0C10;
+  --surface:#13151C;
+  --surface2:#1A1D28;
+  --border:#252836;
+  --accent:#4A3FD4;
+  --pulse:#7B72E8;
+  --green:#22C55E;
+  --yellow:#F59E0B;
+  --red:#EF4444;
+  --text:#F2F0EB;
+  --muted:#6B7280;
+  --secondary:#9CA3AF;
+  --pmh:#4A3FD4;
+  --cor:#059669;
+  --ros:#D97706;
+}
+
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+
+/* ── LOGIN OVERLAY ── */
+#login-overlay{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+.login-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:40px 36px;width:340px;text-align:center;
+}
+.login-logo{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;}
+.login-logo span{color:var(--accent);}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:28px;}
+.login-box input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:10px 14px;font-size:13px;
+  font-family:'Inter',sans-serif;margin-bottom:12px;outline:none;
+}
+.login-box input:focus{border-color:var(--accent);}
+.login-box button{
+  width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;
+  transition:background 0.15s;
+}
+.login-box button:hover{background:var(--pulse);}
+.login-error{font-size:12px;color:var(--red);margin-top:8px;display:none;}
+
+/* ── LAYOUT ── */
+#app{display:none;}
+.shell{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:220px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  padding:0;overflow-y:auto;
+}
+.sidebar-logo{
+  padding:20px 20px 16px;border-bottom:1px solid var(--border);
+  font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;
+}
+.sidebar-logo span{color:var(--accent);}
+.sidebar-logo .tagline{font-size:10px;color:var(--muted);font-weight:400;display:block;margin-top:2px;font-family:'Inter',sans-serif;}
+
+.sidebar-section{padding:14px 12px 6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;font-weight:600;}
+
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:8px 12px;
+  border-radius:7px;margin:1px 8px;cursor:pointer;
+  font-size:13px;color:var(--secondary);transition:all 0.12s;
+  border:none;background:none;width:calc(100% - 16px);text-align:left;
+  font-family:'Inter',sans-serif;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--accent);color:#fff;}
+.nav-item .icon{font-size:14px;width:18px;text-align:center;}
+
+.venue-badge{
+  display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;
+}
+
+.sidebar-bottom{margin-top:auto;padding:14px 12px;border-top:1px solid var(--border);}
+.sync-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;padding:28px 32px;}
+
+/* ── VIEWS ── */
+.view{display:none;}
+.view.active{display:block;}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;}
+.page-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.3px;}
+.page-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:60px 0;color:var(--muted);font-size:13px;}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── ERROR BANNER ── */
+.error-banner{
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
+  color:var(--red);border-radius:8px;padding:12px 16px;margin-bottom:20px;
+  font-size:12px;display:none;
+}
+
+/* ── KPI ROW ── */
+.kpi-row{display:grid;gap:12px;margin-bottom:24px;}
+.kpi-row-5{grid-template-columns:repeat(5,1fr);}
+.kpi-row-4{grid-template-columns:repeat(4,1fr);}
+.kpi-row-3{grid-template-columns:repeat(3,1fr);}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.kpi-value{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.kpi-delta-up{font-size:11px;color:var(--green);margin-top:4px;}
+.kpi-delta-warn{font-size:11px;color:var(--yellow);margin-top:4px;}
+
+/* ── VENUE CARDS ── */
+.venue-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
+.venue-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:border-color 0.15s,transform 0.15s;
+}
+.venue-card:hover{border-color:var(--pulse);transform:translateY(-2px);}
+.vc-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
+.venue-tag{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:4px;}
+.tag-pmh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
+.tag-cor{background:rgba(5,150,105,0.2);color:#6EE7B7;}
+.tag-ros{background:rgba(217,119,6,0.2);color:#FCD34D;}
+.status-pill{font-size:11px;display:flex;align-items:center;gap:5px;color:var(--muted);}
+.sdot{width:6px;height:6px;border-radius:50%;}
+.sdot-g{background:var(--green);}
+.sdot-y{background:var(--yellow);}
+.sdot-r{background:var(--red);}
+.venue-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-top:10px;}
+.venue-loc{font-size:11px;color:var(--muted);margin-top:3px;}
+.vc-body{padding:16px 20px;}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.prog-label{font-size:11px;color:var(--muted);}
+.prog-pct{font-size:12px;font-weight:600;}
+.prog-bar{height:4px;background:var(--surface2);border-radius:3px;margin-bottom:14px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;}
+.fill-pmh{background:linear-gradient(90deg,var(--pmh),var(--pulse));}
+.fill-cor{background:linear-gradient(90deg,#059669,#34D399);}
+.fill-ros{background:linear-gradient(90deg,#D97706,#FCD34D);}
+.vc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.vm{background:var(--surface2);border-radius:7px;padding:9px 11px;}
+.vm-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;}
+.vm-value{font-size:13px;font-weight:600;margin-top:3px;font-family:'Space Grotesk',sans-serif;}
+.vc-footer{padding:11px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.milestone-text{font-size:11px;}
+.ms-label{color:var(--muted);}
+.view-link{font-size:11px;color:var(--pulse);cursor:pointer;}
+.view-link:hover{color:var(--text);}
+
+/* ── TABLES ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
+.card-header .sub{font-size:11px;color:var(--muted);font-weight:400;margin-left:8px;}
+.card-action{font-size:11px;color:var(--pulse);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;padding:9px 18px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;}
+.tbl td{padding:10px 18px;border-bottom:1px solid var(--border);font-size:12px;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--surface2);}
+.tbl-empty{color:var(--muted);text-align:center;padding:30px!important;font-size:12px;}
+
+/* ── CHIPS & BADGES ── */
+.chip{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
+.chip-pmh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
+.chip-cor{background:rgba(5,150,105,0.2);color:#6EE7B7;}
+.chip-ros{background:rgba(217,119,6,0.2);color:#FCD34D;}
+.chip-all{background:rgba(107,114,128,0.2);color:#9CA3AF;}
+
+.badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500;}
+.badge-green{background:rgba(34,197,94,0.15);color:#86EFAC;}
+.badge-yellow{background:rgba(245,158,11,0.15);color:#FCD34D;}
+.badge-red{background:rgba(239,68,68,0.15);color:#FCA5A5;}
+.badge-blue{background:rgba(74,63,212,0.2);color:#A5A0F5;}
+.badge-gray{background:rgba(107,114,128,0.2);color:#9CA3AF;}
+
+/* ── TWO-COL LAYOUT ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+/* ── DETAIL VIEW ── */
+.back-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:none;border:none;font-family:'Inter',sans-serif;}
+.back-btn:hover{color:var(--text);}
+.detail-title{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.4px;}
+.detail-meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:14px;}
+.detail-grid{display:grid;grid-template-columns:3fr 1fr;gap:16px;margin-top:20px;}
+
+/* ── SECTION CARD ── */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;}
+.sc-title{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:14px;font-weight:600;}
+
+/* ── TASK LIST ── */
+.task-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border-radius:7px;margin-bottom:6px;}
+.task-accion{flex:1;font-size:12px;}
+.task-owner{font-size:11px;color:var(--muted);}
+.task-due{font-size:10px;padding:2px 6px;border-radius:4px;}
+.due-urgent{background:rgba(239,68,68,0.15);color:var(--red);}
+.due-soon{background:rgba(245,158,11,0.12);color:var(--yellow);}
+.due-ok{background:rgba(34,197,94,0.1);color:var(--green);}
+.due-pending{color:var(--muted);}
+
+/* ── CALENDAR ── */
+.month-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.month-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-bottom:12px;}
+.cal-item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);}
+.cal-item:last-child{border-bottom:none;}
+.cal-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:28px;}
+.cal-bar-r{background:var(--red);}
+.cal-bar-y{background:var(--yellow);}
+.cal-bar-g{background:var(--green);}
+.cal-bar-b{background:var(--accent);}
+.cal-info{}
+.cal-title{font-size:12px;font-weight:500;}
+.cal-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── SHOWS CALENDAR ── */
+.show-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);}
+.show-item:last-child{border-bottom:none;}
+.show-date-box{background:var(--surface2);border-radius:7px;padding:6px 10px;text-align:center;min-width:44px;}
+.show-day{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;line-height:1;}
+.show-month{font-size:9px;color:var(--muted);text-transform:uppercase;margin-top:1px;}
+.show-info{flex:1;}
+.show-artist{font-size:13px;font-weight:500;}
+.show-venue-cap{font-size:11px;color:var(--muted);margin-top:2px;}
+.show-status{text-align:right;}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 15px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--pulse);}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+
+/* ── SIDEBAR KPI ── */
+.sk{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+.sk-label{font-size:10px;color:var(--muted);margin-bottom:5px;}
+.sk-value{font-size:18px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+.sk-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ── FILTERS ── */
+.filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:5px 12px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.12s;}
+.filter-btn:hover,.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){.venue-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:800px){
+  .sidebar{width:180px;}
+  .venue-grid{grid-template-columns:1fr;}
+  .kpi-row-5{grid-template-columns:repeat(3,1fr);}
+  .kpi-row-4{grid-template-columns:repeat(2,1fr);}
+  .two-col,.three-col{grid-template-columns:1fr;}
+  .detail-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">dale<span>.</span>venues</div>
+    <div class="login-sub">Acceso interno — Dale Play</div>
+    <input type="password" id="pw-input" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      dale<span>.</span>venues
+      <span class="tagline">Dale Play · Venue Ops</span>
+    </div>
+
+    <div class="sidebar-section">General</div>
+    <button class="nav-item active" onclick="nav('overview')"><span class="icon">⬡</span>Overview</button>
+    <button class="nav-item" onclick="nav('comercial')"><span class="icon">◈</span>Comercial</button>
+    <button class="nav-item" onclick="nav('shows')"><span class="icon">◎</span>Programación</button>
+    <button class="nav-item" onclick="nav('tareas')"><span class="icon">◻</span>Tareas</button>
+    <button class="nav-item" onclick="nav('calendario')"><span class="icon">◷</span>Calendario</button>
+
+    <div class="sidebar-section" style="margin-top:8px;">Venues</div>
+    <button class="nav-item" onclick="showVenueDetail('PMH')"><span class="venue-badge" style="background:#4A3FD4"></span>Palermo Music Hall</button>
+    <button class="nav-item" onclick="showVenueDetail('CBA')"><span class="venue-badge" style="background:#059669"></span>Córdoba Arena</button>
+    <button class="nav-item" onclick="showVenueDetail('ROS')"><span class="venue-badge" style="background:#D97706"></span>Arena Rosario</button>
+
+    <div class="sidebar-bottom">
+      <div class="sync-status">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Cargando datos…</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div class="view active" id="view-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Overview</div>
+          <div class="page-sub">Estado general de los 3 proyectos under construction</div>
+        </div>
+        <button class="btn btn-ghost" onclick="reloadData()">↺ Actualizar</button>
+      </div>
+      <div class="error-banner" id="err-overview"></div>
+      <div id="overview-loading" class="loading"><div class="spinner"></div>Cargando datos de Google Sheets…</div>
+      <div id="overview-content" style="display:none">
+        <div class="kpi-row kpi-row-4" id="overview-kpis"></div>
+        <div class="venue-grid" id="venue-cards"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">Acuerdos Activos <span class="sub" id="deals-count"></span></div>
+            <table class="tbl"><thead><tr><th>Empresa</th><th>Venue</th><th>Tipo</th><th>Valor</th><th>Estado</th></tr></thead>
+            <tbody id="tbl-deals-overview"></tbody></table>
+          </div>
+          <div class="card">
+            <div class="card-header">Hitos Críticos Próximos</div>
+            <table class="tbl"><thead><tr><th>Hito</th><th>Venue</th><th>Fecha</th><th>Estado</th></tr></thead>
+            <tbody id="tbl-hitos-overview"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMERCIAL -->
+    <div class="view" id="view-comercial">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Comercial & Deals</div>
+          <div class="page-sub">Naming rights, patrocinios, F&B, promotores y concesiones</div>
+        </div>
+      </div>
+      <div class="error-banner" id="err-comercial"></div>
+      <div id="comercial-loading" class="loading"><div class="spinner"></div>Cargando…</div>
+      <div id="comercial-content" style="display:none">
+        <div class="kpi-row kpi-row-4" id="comercial-kpis"></div>
+        <div class="filter-row" id="comercial-filters">
+          <button class="filter-btn active" onclick="filterDeals('todos',this)">Todos</button>
+          <button class="filter-btn" onclick="filterDeals('PMH',this)">PMH</button>
+          <button class="filter-btn" onclick="filterDeals('CBA',this)">Córdoba</button>
+          <button class="filter-btn" onclick="filterDeals('ROS',this)">Rosario</button>
+        </div>
+        <div class="card">
+          <div class="card-header">Pipeline de Acuerdos <span class="sub" id="pipeline-count"></span></div>
+          <table class="tbl">
+            <thead><tr><th>Empresa</th><th>Venue</th><th>Categoría</th><th>Valor</th><th>Duración</th><th>Prob.</th><th>Estado</th><th>Próx. acción</th></tr></thead>
+            <tbody id="tbl-deals-full"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOWS -->
+    <div class="view" id="view-shows">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Programación de Shows</div>
+          <div class="page-sub">Shows confirmados, en negociación y disponibilidad de fechas</div>
+        </div>
+      </div>
+      <div class="error-banner" id="err-shows"></div>
+      <div id="shows-loading" class="loading"><div class="spinner"></div>Cargando…</div>
+      <div id="shows-content" style="display:none">
+        <div class="kpi-row kpi-row-3" id="shows-kpis"></div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterShows('todos',this)">Todos</button>
+          <button class="filter-btn" onclick="filterShows('Confirmado',this)">Confirmados</button>
+          <button class="filter-btn" onclick="filterShows('Hold',this)">En Hold</button>
+          <button class="filter-btn" onclick="filterShows('Negociación',this)">Negociación</button>
+        </div>
+        <div class="card" id="shows-list-card">
+          <div class="card-header">Shows <span class="sub" id="shows-count"></span></div>
+          <div id="shows-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAREAS -->
+    <div class="view" id="view-tareas">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Tareas & Responsables</div>
+          <div class="page-sub">Acciones pendientes por venue y responsable</div>
+        </div>
+      </div>
+      <div class="error-banner" id="err-tareas"></div>
+      <div id="tareas-loading" class="loading"><div class="spinner"></div>Cargando…</div>
+      <div id="tareas-content" style="display:none">
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterTareas('todas',this)">Todas</button>
+          <button class="filter-btn" onclick="filterTareas('PMH',this)">PMH</button>
+          <button class="filter-btn" onclick="filterTareas('CBA',this)">Córdoba</button>
+          <button class="filter-btn" onclick="filterTareas('ROS',this)">Rosario</button>
+          <button class="filter-btn" onclick="filterTareas('urgente',this)">🔴 Urgentes</button>
+        </div>
+        <div class="card">
+          <div class="card-header">Tareas Activas <span class="sub" id="tareas-count"></span></div>
+          <table class="tbl">
+            <thead><tr><th>Tarea</th><th>Venue</th><th>Responsable</th><th>Categoría</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+            <tbody id="tbl-tareas"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDARIO -->
+    <div class="view" id="view-calendario">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Calendario de Hitos</div>
+          <div class="page-sub">Hitos críticos y deadlines de los 3 venues</div>
+        </div>
+      </div>
+      <div class="error-banner" id="err-calendario"></div>
+      <div id="calendario-loading" class="loading"><div class="spinner"></div>Cargando…</div>
+      <div id="calendario-content" style="display:none">
+        <div id="calendario-months"></div>
+      </div>
+    </div>
+
+    <!-- VENUE DETAIL -->
+    <div class="view" id="view-venue-detail">
+      <button class="back-btn" onclick="nav('overview')">← Volver al Overview</button>
+      <div id="venue-detail-content"></div>
+    </div>
+
+  </main>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIGURACIÓN — editá estas dos líneas
+// ═══════════════════════════════════════════════════
+const SHEET_ID = 'TU_SHEET_ID_AQUI';      // ID de tu Google Sheet
+const PASSWORD = 'daleplay2026';            // Cambiá esto
+
+// ═══════════════════════════════════════════════════
+//  CACHE DE DATOS
+// ═══════════════════════════════════════════════════
+let DATA = { venues:[], deals:[], shows:[], tareas:[], hitos:[] };
+let currentVenue = null;
+
+// ═══════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════
+function doLogin(){
+  const v = document.getElementById('pw-input').value;
+  if(v === PASSWORD){
+    document.getElementById('login-overlay').style.display='none';
+    document.getElementById('app').style.display='flex';
+    loadAllData();
+  } else {
+    document.getElementById('login-error').style.display='block';
+    document.getElementById('pw-input').value='';
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ═══════════════════════════════════════════════════
+function nav(viewName){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+viewName).classList.add('active');
+  const idx={overview:0,comercial:1,shows:2,tareas:3,calendario:4};
+  const btns=document.querySelectorAll('.nav-item');
+  if(idx[viewName]!==undefined) btns[idx[viewName]].classList.add('active');
+}
+
+function showVenueDetail(code){
+  currentVenue=code;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-venue-detail').classList.add('active');
+  renderVenueDetail(code);
+}
+
+// ═══════════════════════════════════════════════════
+//  FETCH DATA FROM GOOGLE SHEETS
+// ═══════════════════════════════════════════════════
+async function fetchSheet(tabName){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+  const res=await fetch(url);
+  const text=await res.text();
+  const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+  const cols=json.table.cols.map(c=>c.label);
+  return json.table.rows.map(r=>{
+    const obj={};
+    cols.forEach((c,i)=>{obj[c]=r.c[i]?r.c[i].v:null;});
+    return obj;
+  });
+}
+
+async function loadAllData(){
+  setSyncStatus('loading');
+  try{
+    const [venues,deals,shows,tareas,hitos]=await Promise.all([
+      fetchSheet('Venues'),
+      fetchSheet('Deals'),
+      fetchSheet('Shows'),
+      fetchSheet('Tareas'),
+      fetchSheet('Hitos'),
+    ]);
+    DATA={venues,deals,shows,tareas,hitos};
+    renderAll();
+    setSyncStatus('ok');
+  }catch(e){
+    setSyncStatus('error');
+    showAllErrors('No se pudo conectar con Google Sheets. Verificá el Sheet ID y que sea público.');
+    console.error(e);
+    // Cargar datos demo si falla
+    loadDemoData();
+  }
+}
+
+function reloadData(){ loadAllData(); }
+
+function setSyncStatus(s){
+  const dot=document.getElementById('sync-dot');
+  const lbl=document.getElementById('sync-label');
+  if(s==='ok'){dot.style.background='var(--green)';lbl.textContent='Datos actualizados';}
+  else if(s==='loading'){dot.style.background='var(--yellow)';lbl.textContent='Sincronizando…';}
+  else{dot.style.background='var(--red)';lbl.textContent='Error de conexión';}
+}
+
+function showAllErrors(msg){
+  ['overview','comercial','shows','tareas','calendario'].forEach(v=>{
+    const el=document.getElementById('err-'+v);
+    if(el){el.textContent='⚠ '+msg;el.style.display='block';}
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  DATOS DEMO (si Sheet no está configurado)
+// ═══════════════════════════════════════════════════
+function loadDemoData(){
+  DATA.venues=[
+    {Codigo:'PMH',Nombre:'Palermo Music Hall',Ciudad:'Buenos Aires',Capacidad:15000,Apertura:'Q1 2027',Inversion:'18M USD',Avance:68,NamingEstado:'Cerrado',NamingEmpresa:'Banco Galicia',ProximoHito:'Licencias municipales',FechaHito:'30 Jun',StatusObra:'En obra'},
+    {Codigo:'CBA',Nombre:'Córdoba Arena',Ciudad:'Córdoba',Capacidad:12000,Apertura:'Q3 2027',Inversion:'15M USD',Avance:45,NamingEstado:'Negociando',NamingEmpresa:'Quilmes',ProximoHito:'Estructura de techo',FechaHito:'15 Jul',StatusObra:'On track'},
+    {Codigo:'ROS',Nombre:'Arena La Nueva Rural',Ciudad:'Rosario',Capacidad:10000,Apertura:'Q4 2027',Inversion:'14M USD',Avance:31,NamingEstado:'Pendiente',NamingEmpresa:'—',ProximoHito:'Permiso ambiental',FechaHito:'22 Jul',StatusObra:'Demora'},
+  ];
+  DATA.deals=[
+    {Empresa:'Banco Galicia',Venue:'PMH',Categoria:'Naming Rights',Valor:'$2.8M',Duracion:'5 años',Probabilidad:'90%',Estado:'Cerrando',ProximaAccion:'Firma contrato'},
+    {Empresa:'Claro',Venue:'PMH',Categoria:'Telecom',Valor:'$800K',Duracion:'3 años',Probabilidad:'75%',Estado:'Activo',ProximaAccion:'Revisar addenda'},
+    {Empresa:'Heineken',Venue:'PMH',Categoria:'F&B',Valor:'$500K',Duracion:'3 años',Probabilidad:'80%',Estado:'Activo',ProximaAccion:'Firma en julio'},
+    {Empresa:'Quilmes',Venue:'CBA',Categoria:'Naming Rights',Valor:'$1.5M',Duracion:'4 años',Probabilidad:'55%',Estado:'Negociando',ProximaAccion:'Counter-propuesta'},
+    {Empresa:'YPF',Venue:'CBA',Categoria:'Concesión',Valor:'$600K',Duracion:'2 años',Probabilidad:'80%',Estado:'Activo',ProximaAccion:'Aprobación interna'},
+    {Empresa:'Rappi',Venue:'ROS',Categoria:'F&B',Valor:'$400K',Duracion:'2 años',Probabilidad:'30%',Estado:'Prospect',ProximaAccion:'Primer meeting'},
+    {Empresa:'Acero Sur',Venue:'ROS',Categoria:'Canje materiales',Valor:'$1.2M',Duracion:'—',Probabilidad:'60%',Estado:'Negociando',ProximaAccion:'Valuar stock'},
+  ];
+  DATA.shows=[
+    {Fecha:'2027-02-14',Artista:'Coldplay',Venue:'PMH',Capacidad:15000,Estado:'Hold',IngresoEst:'$4.5M'},
+    {Fecha:'2027-03-08',Artista:'Duki',Venue:'PMH',Capacidad:15000,Estado:'Negociación',IngresoEst:'$1.8M'},
+    {Fecha:'2027-09-20',Artista:'Bad Bunny',Venue:'CBA',Capacidad:12000,Estado:'Confirmado',IngresoEst:'$3.2M'},
+    {Fecha:'2027-10-05',Artista:'Bizarrap',Venue:'CBA',Capacidad:12000,Estado:'Hold',IngresoEst:'$2.1M'},
+    {Fecha:'2027-11-15',Artista:'Abel Pintos',Venue:'ROS',Capacidad:10000,Estado:'Negociación',IngresoEst:'$900K'},
+  ];
+  DATA.tareas=[
+    {Tarea:'Gestionar licencias municipales',Venue:'PMH',Responsable:'Turco',Categoria:'Legal',Vencimiento:'2026-06-30',Estado:'Urgente'},
+    {Tarea:'Cerrar contrato Naming Galicia',Venue:'PMH',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-10',Estado:'En curso'},
+    {Tarea:'Licitación sistema de sonido',Venue:'PMH',Responsable:'Ops',Categoria:'Técnico',Vencimiento:'2026-07-31',Estado:'Pendiente'},
+    {Tarea:'Counter-propuesta Quilmes',Venue:'CBA',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-15',Estado:'En curso'},
+    {Tarea:'Gestión permiso ambiental',Venue:'ROS',Responsable:'Legal',Categoria:'Legal',Vencimiento:'2026-07-22',Estado:'Urgente'},
+    {Tarea:'Definir F&B operator',Venue:'PMH',Responsable:'Ops',Categoria:'Operativo',Vencimiento:'2026-08-01',Estado:'Pendiente'},
+    {Tarea:'Enviar deck a Personal',Venue:'ROS',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-05',Estado:'Pendiente'},
+  ];
+  DATA.hitos=[
+    {Hito:'Licencias municipales',Venue:'PMH',Fecha:'2026-06-30',Categoria:'Legal',Estado:'Urgente'},
+    {Hito:'Cierre Naming Galicia',Venue:'PMH',Fecha:'2026-07-10',Categoria:'Comercial',Estado:'En curso'},
+    {Hito:'Estructura de techo',Venue:'CBA',Fecha:'2026-07-15',Categoria:'Obra',Estado:'OK'},
+    {Hito:'Permiso ambiental',Venue:'ROS',Fecha:'2026-07-22',Categoria:'Legal',Estado:'En riesgo'},
+    {Hito:'Presentación Directorio',Venue:'Todos',Fecha:'2026-08-01',Categoria:'Gestión',Estado:'Pendiente'},
+    {Hito:'Licitación AV Córdoba',Venue:'CBA',Fecha:'2026-08-20',Categoria:'Técnico',Estado:'Pendiente'},
+    {Hito:'Apertura PMH',Venue:'PMH',Fecha:'2027-01-15',Categoria:'Apertura',Estado:'Pendiente'},
+  ];
+  renderAll();
+  setSyncStatus('error');
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════════
+function renderAll(){
+  renderOverview();
+  renderComercial();
+  renderShows();
+  renderTareas();
+  renderCalendario();
+  ['overview','comercial','shows','tareas','calendario'].forEach(v=>{
+    document.getElementById(v+'-loading').style.display='none';
+    document.getElementById(v+'-content').style.display='block';
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+function venueChip(code){
+  const map={PMH:'chip-pmh',CBA:'chip-cor',ROS:'chip-ros'};
+  const label={PMH:'PMH',CBA:'CBA',ROS:'ROS'};
+  return `<span class="chip ${map[code]||'chip-all'}">${label[code]||code}</span>`;
+}
+
+function dealBadge(estado){
+  const m={
+    'Cerrado':'badge-green','Cerrando':'badge-green',
+    'Activo':'badge-blue','Negociando':'badge-yellow',
+    'Prospect':'badge-gray','En riesgo':'badge-red',
+  };
+  return `<span class="badge ${m[estado]||'badge-gray'}">${estado}</span>`;
+}
+
+function hitoBadge(estado){
+  const m={'Urgente':'badge-red','En riesgo':'badge-red','En curso':'badge-yellow','OK':'badge-green','Pendiente':'badge-gray'};
+  return `<span class="badge ${m[estado]||'badge-gray'}">${estado}</span>`;
+}
+
+function duracionDue(fecha){
+  if(!fecha) return '<span class="task-due due-pending">—</span>';
+  const d=new Date(fecha), now=new Date();
+  const diff=Math.ceil((d-now)/(1000*60*60*24));
+  if(diff<=7) return `<span class="task-due due-urgent">${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</span>`;
+  if(diff<=21) return `<span class="task-due due-soon">${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</span>`;
+  return `<span class="task-due due-ok">${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</span>`;
+}
+
+function venueColor(code){
+  return {PMH:'var(--pmh)',CBA:'var(--cor)',ROS:'var(--ros)'}[code]||'var(--accent)';
+}
+function venueFill(code){
+  return {PMH:'fill-pmh',CBA:'fill-cor',ROS:'fill-ros'}[code]||'fill-pmh';
+}
+function venueTagClass(code){
+  return {PMH:'tag-pmh',CBA:'tag-cor',ROS:'tag-ros'}[code]||'tag-pmh';
+}
+
+// ═══════════════════════════════════════════════════
+//  OVERVIEW
+// ═══════════════════════════════════════════════════
+function renderOverview(){
+  const dealsActivos=DATA.deals.filter(d=>d.Estado&&d.Estado!=='Prospect');
+  const totalPipeline=DATA.deals.reduce((s,d)=>{
+    const n=parseFloat((d.Valor||'').replace(/[$MK,]/g,m=>m==='M'?'000000':m==='K'?'000':''));
+    return s+(isNaN(n)?0:n);
+  },0);
+  const cerrados=DATA.deals.filter(d=>d.Estado==='Cerrado'||d.Estado==='Activo').length;
+  const avgAvance=DATA.venues.length?Math.round(DATA.venues.reduce((s,v)=>s+(+v.Avance||0),0)/DATA.venues.length):0;
+
+  document.getElementById('overview-kpis').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Venues en Desarrollo</div><div class="kpi-value">${DATA.venues.length}</div><div class="kpi-sub">Under construction</div></div>
+    <div class="kpi-card"><div class="kpi-label">Deals Activos</div><div class="kpi-value" style="color:var(--green)">${cerrados}</div><div class="kpi-delta-up">↑ Pipeline abierto</div></div>
+    <div class="kpi-card"><div class="kpi-label">Shows en Agenda</div><div class="kpi-value" style="color:var(--pulse)">${DATA.shows.length}</div><div class="kpi-sub">${DATA.shows.filter(s=>s.Estado==='Confirmado').length} confirmados</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avance Promedio Obra</div><div class="kpi-value" style="color:var(--yellow)">${avgAvance}%</div><div class="kpi-delta-warn">3 venues activos</div></div>
+  `;
+
+  // Venue cards
+  document.getElementById('venue-cards').innerHTML=DATA.venues.map(v=>{
+    const statusMap={'On track':'sdot-g','En obra':'sdot-y','Demora':'sdot-r'};
+    const avance=+v.Avance||0;
+    return `
+    <div class="venue-card" onclick="showVenueDetail('${v.Codigo}')">
+      <div class="vc-header">
+        <div>
+          <span class="venue-tag ${venueTagClass(v.Codigo)}">${v.Codigo}</span>
+          <div class="venue-name">${v.Nombre}</div>
+          <div class="venue-loc">${v.Ciudad} · ${Number(v.Capacidad).toLocaleString()} cap.</div>
+        </div>
+        <div class="status-pill"><div class="sdot ${statusMap[v.StatusObra]||'sdot-y'}"></div>${v.StatusObra||'—'}</div>
+      </div>
+      <div class="vc-body">
+        <div class="prog-row"><span class="prog-label">Avance de obra</span><span class="prog-pct" style="color:${venueColor(v.Codigo)}">${avance}%</span></div>
+        <div class="prog-bar"><div class="prog-fill ${venueFill(v.Codigo)}" style="width:${avance}%"></div></div>
+        <div class="vc-metrics">
+          <div class="vm"><div class="vm-label">Naming</div><div class="vm-value" style="color:${v.NamingEstado==='Cerrado'?'var(--green)':v.NamingEstado==='Negociando'?'var(--yellow)':'var(--muted)'}">${v.NamingEstado||'—'}</div></div>
+          <div class="vm"><div class="vm-label">Apertura Est.</div><div class="vm-value">${v.Apertura||'—'}</div></div>
+          <div class="vm"><div class="vm-label">Inversión</div><div class="vm-value">${v.Inversion||'—'}</div></div>
+          <div class="vm"><div class="vm-label">Shows agenda</div><div class="vm-value">${DATA.shows.filter(s=>s.Venue===v.Codigo).length}</div></div>
+        </div>
+      </div>
+      <div class="vc-footer">
+        <div class="milestone-text"><span class="ms-label">Próx. hito: </span>${v.ProximoHito||'—'} — ${v.FechaHito||'—'}</div>
+        <span class="view-link">Ver detalle →</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Deals overview table
+  const top5=DATA.deals.filter(d=>d.Estado!=='Prospect').slice(0,5);
+  document.getElementById('deals-count').textContent=dealsActivos.length+' activos';
+  document.getElementById('tbl-deals-overview').innerHTML=top5.length
+    ? top5.map(d=>`<tr><td>${d.Empresa}</td><td>${venueChip(d.Venue)}</td><td>${d.Categoria}</td><td>${d.Valor}</td><td>${dealBadge(d.Estado)}</td></tr>`).join('')
+    : `<tr><td class="tbl-empty" colspan="5">Sin datos</td></tr>`;
+
+  // Hitos overview
+  const proxHitos=DATA.hitos.sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha)).slice(0,6);
+  document.getElementById('tbl-hitos-overview').innerHTML=proxHitos.length
+    ? proxHitos.map(h=>{
+        const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'—';
+        return `<tr><td>${h.Hito}</td><td>${venueChip(h.Venue)}</td><td>${d}</td><td>${hitoBadge(h.Estado)}</td></tr>`;
+      }).join('')
+    : `<tr><td class="tbl-empty" colspan="4">Sin datos</td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  COMERCIAL
+// ═══════════════════════════════════════════════════
+let currentDealFilter='todos';
+function renderComercial(){
+  const activos=DATA.deals.filter(d=>d.Estado==='Activo'||d.Estado==='Cerrado'||d.Estado==='Cerrando').length;
+  const neg=DATA.deals.filter(d=>d.Estado==='Negociando').length;
+  const naming=DATA.deals.filter(d=>d.Categoria==='Naming Rights').length;
+  const canje=DATA.deals.filter(d=>d.Categoria==='Canje materiales').length;
+  document.getElementById('comercial-kpis').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Total en Pipeline</div><div class="kpi-value" style="color:var(--pulse)">${DATA.deals.length}</div><div class="kpi-sub">acuerdos registrados</div></div>
+    <div class="kpi-card"><div class="kpi-label">Activos / Cerrados</div><div class="kpi-value" style="color:var(--green)">${activos}</div><div class="kpi-delta-up">en ejecución</div></div>
+    <div class="kpi-card"><div class="kpi-label">En Negociación</div><div class="kpi-value" style="color:var(--yellow)">${neg}</div><div class="kpi-sub">requieren seguimiento</div></div>
+    <div class="kpi-card"><div class="kpi-label">Naming Rights</div><div class="kpi-value">${naming}</div><div class="kpi-sub">${canje} canjes de material</div></div>
+  `;
+  renderDealsTable();
+}
+
+function renderDealsTable(filter){
+  if(filter) currentDealFilter=filter;
+  let deals=DATA.deals;
+  if(currentDealFilter!=='todos') deals=deals.filter(d=>d.Venue===currentDealFilter);
+  document.getElementById('pipeline-count').textContent=deals.length+' acuerdos';
+  document.getElementById('tbl-deals-full').innerHTML=deals.length
+    ? deals.map(d=>`
+      <tr>
+        <td><strong>${d.Empresa}</strong></td>
+        <td>${venueChip(d.Venue)}</td>
+        <td>${d.Categoria}</td>
+        <td>${d.Valor}</td>
+        <td>${d.Duracion||'—'}</td>
+        <td style="color:${parseFloat(d.Probabilidad)>70?'var(--green)':parseFloat(d.Probabilidad)>40?'var(--yellow)':'var(--muted)'}">${d.Probabilidad||'—'}</td>
+        <td>${dealBadge(d.Estado)}</td>
+        <td style="color:var(--secondary)">${d.ProximaAccion||'—'}</td>
+      </tr>`).join('')
+    : `<tr><td class="tbl-empty" colspan="8">Sin acuerdos para este filtro</td></tr>`;
+}
+
+function filterDeals(f,btn){
+  document.querySelectorAll('#comercial-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDealsTable(f);
+}
+
+// ═══════════════════════════════════════════════════
+//  SHOWS
+// ═══════════════════════════════════════════════════
+let currentShowFilter='todos';
+function renderShows(){
+  const conf=DATA.shows.filter(s=>s.Estado==='Confirmado').length;
+  const hold=DATA.shows.filter(s=>s.Estado==='Hold').length;
+  const neg=DATA.shows.filter(s=>s.Estado==='Negociación').length;
+  document.getElementById('shows-kpis').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Confirmados</div><div class="kpi-value" style="color:var(--green)">${conf}</div><div class="kpi-sub">shows en agenda</div></div>
+    <div class="kpi-card"><div class="kpi-label">En Hold</div><div class="kpi-value" style="color:var(--yellow)">${hold}</div><div class="kpi-sub">pendientes de confirmación</div></div>
+    <div class="kpi-card"><div class="kpi-label">En Negociación</div><div class="kpi-value" style="color:var(--muted)">${neg}</div><div class="kpi-sub">en conversación</div></div>
+  `;
+  renderShowsList();
+}
+
+function renderShowsList(filter){
+  if(filter) currentShowFilter=filter;
+  let shows=[...DATA.shows];
+  if(currentShowFilter!=='todos') shows=shows.filter(s=>s.Estado===currentShowFilter);
+  shows.sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
+  document.getElementById('shows-count').textContent=shows.length+' shows';
+  document.getElementById('shows-list').innerHTML=shows.length
+    ? shows.map(s=>{
+        const d=s.Fecha?new Date(s.Fecha):null;
+        const day=d?d.getDate():'—';
+        const month=d?d.toLocaleDateString('es-AR',{month:'short'}).toUpperCase():'';
+        const statusColor={Confirmado:'var(--green)',Hold:'var(--yellow)',Negociación:'var(--muted)'}[s.Estado]||'var(--muted)';
+        return `
+        <div class="show-item">
+          <div class="show-date-box">
+            <div class="show-day">${day}</div>
+            <div class="show-month">${month}</div>
+          </div>
+          <div class="show-info">
+            <div class="show-artist">${s.Artista}</div>
+            <div class="show-venue-cap">${venueChip(s.Venue)} · ${Number(s.Capacidad||0).toLocaleString()} cap.</div>
+          </div>
+          <div class="show-status">
+            <span class="badge" style="background:${statusColor}22;color:${statusColor}">${s.Estado}</span>
+            ${s.IngresoEst?`<div style="font-size:12px;font-weight:600;margin-top:4px;font-family:'Space Grotesk',sans-serif">${s.IngresoEst}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')
+    : `<div class="tbl-empty">Sin shows para este filtro</div>`;
+}
+
+function filterShows(f,btn){
+  document.querySelectorAll('#view-shows .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderShowsList(f);
+}
+
+// ═══════════════════════════════════════════════════
+//  TAREAS
+// ═══════════════════════════════════════════════════
+let currentTareaFilter='todas';
+function renderTareas(filter){
+  if(filter) currentTareaFilter=filter;
+  let tareas=[...DATA.tareas];
+  if(currentTareaFilter==='urgente') tareas=tareas.filter(t=>t.Estado==='Urgente');
+  else if(currentTareaFilter!=='todas') tareas=tareas.filter(t=>t.Venue===currentTareaFilter);
+  tareas.sort((a,b)=>new Date(a.Vencimiento)-new Date(b.Vencimiento));
+  document.getElementById('tareas-count').textContent=tareas.length+' tareas';
+  document.getElementById('tbl-tareas').innerHTML=tareas.length
+    ? tareas.map(t=>`
+      <tr>
+        <td>${t.Tarea}</td>
+        <td>${venueChip(t.Venue)}</td>
+        <td>${t.Responsable||'—'}</td>
+        <td><span style="font-size:11px;color:var(--secondary)">${t.Categoria||'—'}</span></td>
+        <td>${duracionDue(t.Vencimiento)}</td>
+        <td>${hitoBadge(t.Estado)}</td>
+      </tr>`).join('')
+    : `<tr><td class="tbl-empty" colspan="6">Sin tareas para este filtro</td></tr>`;
+}
+
+function filterTareas(f,btn){
+  document.querySelectorAll('#view-tareas .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTareas(f);
+}
+
+// ═══════════════════════════════════════════════════
+//  CALENDARIO
+// ═══════════════════════════════════════════════════
+function renderCalendario(){
+  const hitos=[...DATA.hitos].sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
+  const byMonth={};
+  hitos.forEach(h=>{
+    const d=h.Fecha?new Date(h.Fecha):null;
+    if(!d) return;
+    const key=d.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    if(!byMonth[key]) byMonth[key]=[];
+    byMonth[key].push({...h,_date:d});
+  });
+  const barColor={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y','OK':'cal-bar-g','Pendiente':'cal-bar-b'};
+  let html='<div class="three-col">';
+  Object.entries(byMonth).forEach(([month,items])=>{
+    html+=`<div class="month-block"><div class="month-title">${month.charAt(0).toUpperCase()+month.slice(1)}</div>`;
+    items.forEach(h=>{
+      const d=h._date.toLocaleDateString('es-AR',{day:'2-digit',month:'short'});
+      html+=`
+      <div class="cal-item">
+        <div class="cal-bar ${barColor[h.Estado]||'cal-bar-b'}"></div>
+        <div class="cal-info">
+          <div class="cal-title">${h.Hito} ${venueChip(h.Venue)}</div>
+          <div class="cal-meta">${d} · ${h.Categoria||''} · ${hitoBadge(h.Estado)}</div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  document.getElementById('calendario-months').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════
+//  VENUE DETAIL
+// ═══════════════════════════════════════════════════
+function renderVenueDetail(code){
+  const v=DATA.venues.find(x=>x.Codigo===code);
+  if(!v){ document.getElementById('venue-detail-content').innerHTML='<p style="color:var(--muted)">Venue no encontrado</p>'; return; }
+  const deals=DATA.deals.filter(d=>d.Venue===code);
+  const shows=DATA.shows.filter(s=>s.Venue===code);
+  const tareas=DATA.tareas.filter(t=>t.Venue===code);
+  const hitos=DATA.hitos.filter(h=>h.Venue===code||h.Venue==='Todos');
+  const avance=+v.Avance||0;
+
+  document.getElementById('venue-detail-content').innerHTML=`
+  <div>
+    <span class="venue-tag ${venueTagClass(code)}" style="margin-bottom:10px;display:inline-block">${code} · ${v.Ciudad}</span>
+    <div class="detail-title">${v.Nombre}</div>
+    <div class="detail-meta">
+      <span>${Number(v.Capacidad||0).toLocaleString()} cap.</span>
+      <span>Apertura: ${v.Apertura}</span>
+      <span>Inversión: ${v.Inversion}</span>
+      <span>${v.StatusObra}</span>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div>
+      <!-- DEALS -->
+      <div class="card">
+        <div class="card-header">Acuerdos Comerciales <span class="sub">${deals.length} registrados</span></div>
+        <table class="tbl">
+          <thead><tr><th>Empresa</th><th>Categoría</th><th>Valor</th><th>Estado</th><th>Próx. acción</th></tr></thead>
+          <tbody>${deals.length
+            ? deals.map(d=>`<tr><td><strong>${d.Empresa}</strong></td><td>${d.Categoria}</td><td>${d.Valor}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'—'}</td></tr>`).join('')
+            : '<tr><td class="tbl-empty" colspan="5">Sin acuerdos cargados</td></tr>'}</tbody>
+        </table>
+      </div>
+
+      <!-- SHOWS -->
+      <div class="card">
+        <div class="card-header">Shows Programados <span class="sub">${shows.length} en agenda</span></div>
+        <table class="tbl">
+          <thead><tr><th>Fecha</th><th>Artista</th><th>Estado</th><th>Ingreso Est.</th></tr></thead>
+          <tbody>${shows.length
+            ? shows.map(s=>{
+                const d=s.Fecha?new Date(s.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'}):'—';
+                return `<tr><td>${d}</td><td>${s.Artista}</td><td>${dealBadge(s.Estado)}</td><td>${s.IngresoEst||'—'}</td></tr>`;
+              }).join('')
+            : '<tr><td class="tbl-empty" colspan="4">Sin shows cargados</td></tr>'}</tbody>
+        </table>
+      </div>
+
+      <!-- TAREAS -->
+      <div class="card">
+        <div class="card-header">Tareas <span class="sub">${tareas.length} activas</span></div>
+        <table class="tbl">
+          <thead><tr><th>Tarea</th><th>Responsable</th><th>Categoría</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+          <tbody>${tareas.length
+            ? tareas.map(t=>`<tr><td>${t.Tarea}</td><td>${t.Responsable||'—'}</td><td>${t.Categoria||'—'}</td><td>${duracionDue(t.Vencimiento)}</td><td>${hitoBadge(t.Estado)}</td></tr>`).join('')
+            : '<tr><td class="tbl-empty" colspan="5">Sin tareas cargadas</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <div class="sk">
+        <div class="sk-label">Avance de Obra</div>
+        <div class="sk-value" style="color:${venueColor(code)}">${avance}%</div>
+        <div class="prog-bar" style="margin-top:8px"><div class="prog-fill ${venueFill(code)}" style="width:${avance}%"></div></div>
+      </div>
+      <div class="sk"><div class="sk-label">Naming Rights</div><div class="sk-value" style="color:${v.NamingEstado==='Cerrado'?'var(--green)':'var(--yellow)'}">${v.NamingEstado||'—'}</div><div class="sk-sub">${v.NamingEmpresa||'Sin empresa asignada'}</div></div>
+      <div class="sk"><div class="sk-label">Apertura Estimada</div><div class="sk-value">${v.Apertura||'—'}</div></div>
+      <div class="sk"><div class="sk-label">Próximo Hito</div><div class="sk-value" style="font-size:14px;margin-top:2px">${v.ProximoHito||'—'}</div><div class="sk-sub">${v.FechaHito||''}</div></div>
+
+      <!-- HITOS -->
+      <div class="section-card" style="margin-top:2px">
+        <div class="sc-title">Hitos del Venue</div>
+        ${hitos.length
+          ? hitos.map(h=>{
+              const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'—';
+              const bc={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y','OK':'cal-bar-g','Pendiente':'cal-bar-b'};
+              return `<div class="cal-item"><div class="cal-bar ${bc[h.Estado]||'cal-bar-b'}"></div><div><div class="cal-title" style="font-size:11px">${h.Hito}</div><div class="cal-meta">${d} · ${hitoBadge(h.Estado)}</div></div></div>`;
+            }).join('')
+          : '<div style="color:var(--muted);font-size:12px">Sin hitos cargados</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+</script>
+</body>
+</html>
