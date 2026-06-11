@@ -13,12 +13,13 @@
   --accent:#4A3FD4;--pulse:#7B72E8;--green:#22C55E;--yellow:#F59E0B;--red:#EF4444;
   --text:#F2F0EB;--muted:#6B7280;--secondary:#9CA3AF;
   --pmh:#4A3FD4;--cor:#059669;--ros:#D97706;
+  --sidebar-w:220px;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
 
-/* LOGIN */
-#login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;}
-.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:340px;text-align:center;}
+/* ── LOGIN ── */
+#login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:340px;text-align:center;}
 .login-logo{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;}
 .login-logo span{color:var(--accent);}
 .login-sub{font-size:12px;color:var(--muted);margin-bottom:28px;}
@@ -28,12 +29,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .login-box button:hover{background:var(--pulse);}
 .login-error{font-size:12px;color:var(--red);margin-top:8px;display:none;}
 
-/* LAYOUT */
+/* ── APP SHELL ── */
 #app{display:none;}
-.shell{display:flex;height:100vh;overflow:hidden;}
+.shell{display:flex;height:100vh;overflow:hidden;position:relative;}
 
-/* SIDEBAR */
-.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+/* ── MOBILE TOPBAR (hidden on desktop) ── */
+.topbar{display:none;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;flex-shrink:0;}
+.topbar-logo{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;}
+.topbar-logo span{color:var(--accent);}
+.hamburger{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:6px;line-height:1;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;transition:transform 0.25s ease;z-index:300;}
 .sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;}
 .sidebar-logo span{color:var(--accent);}
 .sidebar-logo .tagline{font-size:10px;color:var(--muted);font-weight:400;display:block;margin-top:2px;font-family:'Inter',sans-serif;}
@@ -42,26 +49,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .nav-item:hover{background:var(--surface2);color:var(--text);}
 .nav-item.active{background:var(--accent);color:#fff;}
 .nav-item .icon{font-size:14px;width:18px;text-align:center;}
-.vdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;}
+.vdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;flex-shrink:0;}
 .sidebar-bottom{margin-top:auto;padding:14px 12px;border-top:1px solid var(--border);}
 .sync-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:290;}
 
-/* MAIN */
-.main{flex:1;overflow-y:auto;padding:28px 32px;}
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;padding:28px 32px;min-width:0;}
 .view{display:none;}
 .view.active{display:block;}
-.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:12px;}
 .page-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.3px;}
 .page-sub{font-size:12px;color:var(--muted);margin-top:3px;}
 
-/* LOADING */
+/* ── LOADING ── */
 .loading{text-align:center;padding:60px 0;color:var(--muted);font-size:13px;}
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .error-banner{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;display:none;}
 
-/* KPI */
+/* ── KPI ── */
 .kpi-row{display:grid;gap:12px;margin-bottom:24px;}
 .kpi-3{grid-template-columns:repeat(3,1fr);}
 .kpi-4{grid-template-columns:repeat(4,1fr);}
@@ -69,10 +77,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
 .kpi-value{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;}
 .kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
-.kpi-up{font-size:11px;color:var(--green);margin-top:4px;}
 .kpi-warn{font-size:11px;color:var(--yellow);margin-top:4px;}
 
-/* VENUE CARDS */
+/* ── VENUE CARDS ── */
 .venue-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
 .venue-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 0.15s,transform 0.15s;}
 .venue-card:hover{border-color:var(--pulse);transform:translateY(-2px);}
@@ -104,22 +111,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .vc-footer{padding:11px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .ms-label{color:var(--muted);font-size:11px;}
 .view-link{font-size:11px;color:var(--pulse);cursor:pointer;}
-.view-link:hover{color:var(--text);}
 
-/* CARDS & TABLES */
+/* ── CARDS & TABLES ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;}
-.card-header{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
-.card-sub{font-size:11px;color:var(--muted);font-weight:400;margin-left:8px;}
-.card-action{font-size:11px;color:var(--pulse);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:4px 10px;border-radius:5px;transition:background 0.12s;}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-sub{font-size:11px;color:var(--muted);font-weight:400;margin-left:4px;}
+.card-action{font-size:11px;color:var(--pulse);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:4px 10px;border-radius:5px;white-space:nowrap;}
 .card-action:hover{background:var(--surface2);}
-.tbl{width:100%;border-collapse:collapse;}
-.tbl th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;padding:9px 18px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;}
+.tbl-wrap{overflow-x:auto;}
+.tbl{width:100%;border-collapse:collapse;min-width:500px;}
+.tbl th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;padding:9px 18px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap;}
 .tbl td{padding:10px 18px;border-bottom:1px solid var(--border);font-size:12px;}
 .tbl tr:last-child td{border-bottom:none;}
 .tbl tr:hover td{background:var(--surface2);}
 .tbl-empty{color:var(--muted);text-align:center;padding:30px!important;font-size:12px;}
 
-/* CHIPS & BADGES */
+/* ── CHIPS & BADGES ── */
 .chip{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
 .chip-pmh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
 .chip-cor{background:rgba(5,150,105,0.2);color:#6EE7B7;}
@@ -132,31 +139,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .badge-blue{background:rgba(74,63,212,0.2);color:#A5A0F5;}
 .badge-gray{background:rgba(107,114,128,0.2);color:#9CA3AF;}
 
-/* GRID LAYOUTS */
+/* ── LAYOUTS ── */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 
-/* PIE CHARTS */
-.pie-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
-.pie-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.pie-title{font-size:12px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+/* ── PIE CHARTS ── */
+.pie-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.pie-card{background:var(--surface2);border-radius:10px;padding:16px;}
+.pie-title{font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
 .pie-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
-.pie-wrap{position:relative;width:140px;height:140px;margin:0 auto 14px;}
-.pie-legend{display:flex;flex-direction:column;gap:5px;}
+.pie-wrap{position:relative;width:130px;height:130px;margin:0 auto 12px;}
+.pie-legend{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
 .pie-legend-item{display:flex;align-items:center;gap:7px;font-size:11px;}
 .pie-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .pie-legend-label{flex:1;color:var(--secondary);}
-.pie-legend-val{font-weight:600;color:var(--text);}
-.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;}
-.status-box{background:var(--surface2);border-radius:6px;padding:8px 10px;}
-.status-box-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;}
-.status-box-val{font-size:15px;font-weight:700;margin-top:2px;font-family:'Space Grotesk',sans-serif;}
+.pie-legend-val{font-weight:600;}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;border-top:1px solid var(--border);padding-top:10px;margin-top:4px;}
+.status-box{background:var(--surface);border-radius:6px;padding:7px 9px;}
+.status-box-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;}
+.status-box-val{font-size:14px;font-weight:700;margin-top:2px;font-family:'Space Grotesk',sans-serif;}
 
-/* DETAIL */
+/* ── DETAIL ── */
 .back-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:none;border:none;font-family:'Inter',sans-serif;}
 .back-btn:hover{color:var(--text);}
-.detail-title{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-0.4px;}
-.detail-meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:14px;}
+.detail-title{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.4px;}
+.detail-meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap;}
 .detail-grid{display:grid;grid-template-columns:3fr 1fr;gap:16px;margin-top:20px;}
 .section-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;}
 .sc-title{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:14px;font-weight:600;}
@@ -165,7 +172,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .sk-value{font-size:18px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
 .sk-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 
-/* TAREAS */
+/* ── FILTERS ── */
 .filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
 .filter-btn{padding:5px 12px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.12s;}
 .filter-btn:hover,.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
@@ -174,12 +181,48 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .due-soon{background:rgba(245,158,11,0.12);color:var(--yellow);}
 .due-ok{background:rgba(34,197,94,0.1);color:var(--green);}
 
-/* CALENDAR */
-.month-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
-.month-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-bottom:12px;}
+/* ── AGENDA CALENDAR ── */
+.agenda-nav{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.agenda-nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.12s;}
+.agenda-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+.agenda-period{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;min-width:160px;}
+.agenda-view-toggle{display:flex;gap:4px;margin-left:auto;}
+.agenda-view-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 11px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;}
+.agenda-view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+.agenda-grid{display:grid;gap:8px;}
+.agenda-day{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.agenda-day.today{border-color:var(--accent);}
+.agenda-day-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.agenda-day.today .agenda-day-header{background:rgba(74,63,212,0.15);}
+.agenda-day-number{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;line-height:1;min-width:28px;}
+.agenda-day.today .agenda-day-number{color:var(--accent);}
+.agenda-day-name{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;}
+.agenda-day-badges{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;}
+.agenda-empty{padding:10px 16px;font-size:11px;color:var(--muted);}
+
+.agenda-event{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);}
+.agenda-event:last-child{border-bottom:none;}
+.agenda-event-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:20px;margin-top:2px;}
+.agenda-event-time{font-size:11px;color:var(--muted);min-width:50px;margin-top:1px;}
+.agenda-event-body{flex:1;min-width:0;}
+.agenda-event-title{font-size:12px;font-weight:500;line-height:1.3;}
+.agenda-event-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+.agenda-event-type{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+.type-gcal{background:rgba(74,63,212,0.15);color:#A5A0F5;}
+.type-hito{background:rgba(107,114,128,0.15);color:#9CA3AF;}
+
+.gcal-section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+
+.btn{padding:8px 15px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--pulse);}
+
+/* ── CAL BARS (for detail sidebar) ── */
 .cal-item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);}
 .cal-item:last-child{border-bottom:none;}
-.cal-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:28px;}
+.cal-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:24px;}
 .cal-bar-r{background:var(--red);}
 .cal-bar-y{background:var(--yellow);}
 .cal-bar-g{background:var(--green);}
@@ -187,11 +230,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .cal-title{font-size:12px;font-weight:500;}
 .cal-meta{font-size:11px;color:var(--muted);margin-top:2px;}
 
-.btn{padding:8px 15px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s;}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:hover{background:var(--pulse);}
-.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
-.btn-ghost:hover{border-color:var(--pulse);}
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .topbar{display:flex;}
+  .shell{flex-direction:column;height:100vh;}
+  .sidebar{
+    position:fixed;top:0;left:0;height:100vh;
+    transform:translateX(-100%);
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.open{display:block;}
+  .main{padding:16px;overflow-y:auto;flex:1;}
+  .venue-grid{grid-template-columns:1fr;}
+  .kpi-3{grid-template-columns:1fr 1fr;}
+  .kpi-4{grid-template-columns:1fr 1fr;}
+  .two-col{grid-template-columns:1fr;}
+  .three-col{grid-template-columns:1fr;}
+  .pie-grid{grid-template-columns:1fr;}
+  .detail-grid{grid-template-columns:1fr;}
+  .page-header{flex-direction:column;gap:10px;}
+  .agenda-view-toggle{margin-left:0;}
+}
+@media(max-width:480px){
+  .kpi-3{grid-template-columns:1fr;}
+  .kpi-4{grid-template-columns:1fr 1fr;}
+  .main{padding:12px;}
+  .login-box{padding:28px 20px;}
+}
 </style>
 </head>
 <body>
@@ -201,66 +266,62 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="login-box">
     <div class="login-logo">dale<span>.</span>venues</div>
     <div class="login-sub">Acceso interno — Dale Play</div>
-    <input type="password" id="pw-input" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+    <input type="password" id="pw-input" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
     <button onclick="doLogin()">Ingresar</button>
-    <div class="login-error" id="login-error">Contraseña incorrecta</div>
+    <div class="login-error" id="login-error">Contrasena incorrecta</div>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app">
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="shell">
-  <aside class="sidebar">
+
+  <!-- MOBILE TOPBAR -->
+  <div class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
+    <div class="topbar-logo">dale<span>.</span>venues</div>
+    <div id="topbar-sync" style="font-size:10px;color:var(--muted)"></div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">dale<span>.</span>venues<span class="tagline">Dale Play · Venue Ops</span></div>
     <div class="sidebar-section">General</div>
-    <button class="nav-item active" onclick="nav('overview')"><span class="icon">⬡</span>Overview</button>
-    <button class="nav-item" onclick="nav('comercial')"><span class="icon">◈</span>Comercial</button>
-    <button class="nav-item" onclick="nav('tareas')"><span class="icon">◻</span>Tareas</button>
-    <button class="nav-item" onclick="nav('calendario')"><span class="icon">◷</span>Calendario</button>
+    <button class="nav-item active" onclick="nav('overview')"><span class="icon">&#11041;</span>Overview</button>
+    <button class="nav-item" onclick="nav('comercial')"><span class="icon">&#11050;</span>Comercial</button>
+    <button class="nav-item" onclick="nav('tareas')"><span class="icon">&#9723;</span>Tareas</button>
+    <button class="nav-item" onclick="nav('calendario')"><span class="icon">&#9711;</span>Calendario</button>
     <div class="sidebar-section" style="margin-top:8px;">Venues</div>
     <button class="nav-item" onclick="showVenueDetail('PMH')"><span class="vdot" style="background:#4A3FD4"></span>Palermo Music Hall</button>
-    <button class="nav-item" onclick="showVenueDetail('CBA')"><span class="vdot" style="background:#059669"></span>Córdoba Arena</button>
+    <button class="nav-item" onclick="showVenueDetail('CBA')"><span class="vdot" style="background:#059669"></span>Cordoba Arena</button>
     <button class="nav-item" onclick="showVenueDetail('ROS')"><span class="vdot" style="background:#D97706"></span>Arena Rosario</button>
     <div class="sidebar-bottom">
-      <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Cargando…</span></div>
+      <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Cargando...</span></div>
     </div>
   </aside>
 
+  <!-- MAIN -->
   <main class="main">
 
     <!-- OVERVIEW -->
     <div class="view active" id="view-overview">
       <div class="page-header">
         <div><div class="page-title">Overview</div><div class="page-sub">Estado general de los 3 proyectos under construction</div></div>
-        <button class="btn btn-ghost" onclick="reloadData()">↺ Actualizar</button>
+        <button class="btn btn-ghost" onclick="reloadData()">Actualizar</button>
       </div>
       <div class="error-banner" id="err-overview"></div>
-      <div id="overview-loading" class="loading"><div class="spinner"></div>Cargando datos…</div>
+      <div id="overview-loading" class="loading"><div class="spinner"></div>Cargando datos...</div>
       <div id="overview-content" style="display:none">
         <div class="kpi-row kpi-3" id="overview-kpis"></div>
         <div class="venue-grid" id="venue-cards"></div>
-
-        <!-- STATUS COMERCIAL -->
         <div class="card" style="margin-bottom:16px">
-          <div class="card-header">
-            Status Comercial
-            <button class="card-action" onclick="nav('comercial')">Ver Pipeline completo →</button>
-          </div>
-          <div style="padding:18px">
-            <div class="pie-grid" id="pie-grid"></div>
-          </div>
+          <div class="card-header">Status Comercial<button class="card-action" onclick="nav('comercial')">Ver Pipeline completo &rarr;</button></div>
+          <div style="padding:16px"><div class="pie-grid" id="pie-grid"></div></div>
         </div>
-
-        <!-- HITOS CRITICOS -->
         <div class="card">
-          <div class="card-header">
-            Hitos Críticos
-            <button class="card-action" onclick="nav('calendario')">Ver Calendario →</button>
-          </div>
-          <table class="tbl">
-            <thead><tr><th>Hito</th><th>Venue</th><th>Fecha</th><th>Estado</th></tr></thead>
-            <tbody id="tbl-hitos-criticos"></tbody>
-          </table>
+          <div class="card-header">Hitos Criticos<button class="card-action" onclick="nav('calendario')">Ver Calendario &rarr;</button></div>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hito</th><th>Venue</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="tbl-hitos-criticos"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -268,24 +329,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- COMERCIAL -->
     <div class="view" id="view-comercial">
       <div class="page-header">
-        <div><div class="page-title">Comercial & Deals</div><div class="page-sub">Naming rights, patrocinios, F&B, promotores y concesiones</div></div>
+        <div><div class="page-title">Comercial & Deals</div><div class="page-sub">Naming rights, patrocinios, F&amp;B, promotores y concesiones</div></div>
       </div>
       <div class="error-banner" id="err-comercial"></div>
-      <div id="comercial-loading" class="loading"><div class="spinner"></div>Cargando…</div>
+      <div id="comercial-loading" class="loading"><div class="spinner"></div>Cargando...</div>
       <div id="comercial-content" style="display:none">
         <div class="kpi-row kpi-4" id="comercial-kpis"></div>
         <div class="filter-row" id="comercial-filters">
           <button class="filter-btn active" onclick="filterDeals('todos',this)">Todos</button>
           <button class="filter-btn" onclick="filterDeals('PMH',this)">PMH</button>
-          <button class="filter-btn" onclick="filterDeals('CBA',this)">Córdoba</button>
+          <button class="filter-btn" onclick="filterDeals('CBA',this)">Cordoba</button>
           <button class="filter-btn" onclick="filterDeals('ROS',this)">Rosario</button>
         </div>
         <div class="card">
           <div class="card-header">Pipeline de Acuerdos <span class="card-sub" id="pipeline-count"></span></div>
-          <table class="tbl">
-            <thead><tr><th>Empresa</th><th>Venue</th><th>Categoría</th><th>Valor</th><th>Duración</th><th>Prob.</th><th>Estado</th><th>Próx. acción</th></tr></thead>
-            <tbody id="tbl-deals-full"></tbody>
-          </table>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Empresa</th><th>Venue</th><th>Categoria</th><th>Valor</th><th>Duracion</th><th>Prob.</th><th>Estado</th><th>Prox. accion</th></tr></thead><tbody id="tbl-deals-full"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -296,21 +354,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         <div><div class="page-title">Tareas & Responsables</div><div class="page-sub">Acciones pendientes por venue y responsable</div></div>
       </div>
       <div class="error-banner" id="err-tareas"></div>
-      <div id="tareas-loading" class="loading"><div class="spinner"></div>Cargando…</div>
+      <div id="tareas-loading" class="loading"><div class="spinner"></div>Cargando...</div>
       <div id="tareas-content" style="display:none">
         <div class="filter-row">
           <button class="filter-btn active" onclick="filterTareas('todas',this)">Todas</button>
           <button class="filter-btn" onclick="filterTareas('PMH',this)">PMH</button>
-          <button class="filter-btn" onclick="filterTareas('CBA',this)">Córdoba</button>
+          <button class="filter-btn" onclick="filterTareas('CBA',this)">Cordoba</button>
           <button class="filter-btn" onclick="filterTareas('ROS',this)">Rosario</button>
-          <button class="filter-btn" onclick="filterTareas('urgente',this)">🔴 Urgentes</button>
+          <button class="filter-btn" onclick="filterTareas('urgente',this)">Urgentes</button>
         </div>
         <div class="card">
           <div class="card-header">Tareas Activas <span class="card-sub" id="tareas-count"></span></div>
-          <table class="tbl">
-            <thead><tr><th>Tarea</th><th>Venue</th><th>Responsable</th><th>Categoría</th><th>Vencimiento</th><th>Estado</th></tr></thead>
-            <tbody id="tbl-tareas"></tbody>
-          </table>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tarea</th><th>Venue</th><th>Responsable</th><th>Categoria</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody id="tbl-tareas"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -318,28 +373,30 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- CALENDARIO -->
     <div class="view" id="view-calendario">
       <div class="page-header">
-        <div><div class="page-title">Calendario</div><div class="page-sub">Reuniones VENUES de Google Calendar + Hitos del proyecto</div></div>
-        <button class="btn btn-ghost" onclick="loadCalendarEvents()">&#8635; Actualizar calendario</button>
+        <div><div class="page-title">Calendario</div><div class="page-sub">Reuniones VENUES + Hitos del proyecto</div></div>
       </div>
       <div class="error-banner" id="err-calendario"></div>
       <div id="calendario-loading" class="loading"><div class="spinner"></div>Cargando...</div>
       <div id="calendario-content" style="display:none">
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-header">
-            Google Calendar <span class="card-sub">reuniones con "VENUES" en el titulo - proximos 3 meses</span>
-            <div id="gcal-sync" style="font-size:11px;color:var(--muted)">Cargando...</div>
+        <!-- AGENDA NAV -->
+        <div class="agenda-nav">
+          <button class="agenda-nav-btn" onclick="agendaMove(-1)">&larr;</button>
+          <div class="agenda-period" id="agenda-period"></div>
+          <button class="agenda-nav-btn" onclick="agendaMove(1)">&rarr;</button>
+          <button class="agenda-nav-btn" onclick="agendaToday()">Hoy</button>
+          <div id="gcal-status" style="font-size:11px;color:var(--muted);margin-left:4px"></div>
+          <div class="agenda-view-toggle">
+            <button class="agenda-view-btn active" onclick="setAgendaView('week',this)">Semana</button>
+            <button class="agenda-view-btn" onclick="setAgendaView('month',this)">Mes</button>
           </div>
-          <div id="gcal-loading" style="padding:20px 18px;color:var(--muted);font-size:12px">Conectando con Google Calendar...</div>
-          <div id="gcal-list" style="display:none"></div>
         </div>
-        <div style="font-size:15px;font-weight:600;font-family:'Space Grotesk',sans-serif;margin-bottom:14px">Hitos del Proyecto</div>
-        <div id="calendario-months"></div>
+        <div id="agenda-body"></div>
       </div>
     </div>
 
     <!-- VENUE DETAIL -->
     <div class="view" id="view-venue-detail">
-      <button class="back-btn" onclick="nav('overview')">← Volver al Overview</button>
+      <button class="back-btn" onclick="nav('overview')">&larr; Volver al Overview</button>
       <div id="venue-detail-content"></div>
     </div>
 
@@ -349,28 +406,47 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <script>
 // ═══════════════════════════════════
-// CONFIGURACIÓN
+// CONFIG — editá estas líneas
 // ═══════════════════════════════════
-const SHEET_ID = '12JdkxYH-TObsyNsrgvPq5Jz9EQvkJQqpPmNk3TrGNSU';
-const PASSWORD = 'dp2026';
+const SHEET_ID       = '12JdkxYH-TObsyNsrgvPq5Jz9EQvkJQqpPmNk3TrGNSU';
+const PASSWORD       = 'daleplay2026';
 const CALENDAR_PROXY = 'https://script.google.com/macros/s/AKfycbzt9q8O8k1YYpLskqigPa7jO25L08kYzMfcGreHBNu1gq-9a0pg-ow7Y4l98QqjmtY/exec';
 
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
 let DATA = {venues:[],deals:[],tareas:[],hitos:[]};
+let GCAL_EVENTS = [];
 let pieCharts = {};
+let agendaView = 'week';   // 'week' | 'month'
+let agendaAnchor = new Date();  // Monday of current week / 1st of current month
 
 // ═══════════════════════════════════
 // LOGIN
 // ═══════════════════════════════════
 function doLogin(){
-  const v = document.getElementById('pw-input').value;
-  if(v === PASSWORD){
+  const v=document.getElementById('pw-input').value;
+  if(v===PASSWORD){
     document.getElementById('login-overlay').style.display='none';
     document.getElementById('app').style.display='flex';
+    agendaAnchor=startOfWeek(new Date());
     loadAllData();
   } else {
     document.getElementById('login-error').style.display='block';
     document.getElementById('pw-input').value='';
   }
+}
+
+// ═══════════════════════════════════
+// SIDEBAR MOBILE
+// ═══════════════════════════════════
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
 }
 
 // ═══════════════════════════════════
@@ -383,12 +459,15 @@ function nav(name){
   const map={overview:0,comercial:1,tareas:2,calendario:3};
   const btns=document.querySelectorAll('.nav-item');
   if(map[name]!==undefined) btns[map[name]].classList.add('active');
+  closeSidebar();
+  if(name==='calendario') renderAgenda();
 }
 
 function showVenueDetail(code){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-venue-detail').classList.add('active');
   renderVenueDetail(code);
+  closeSidebar();
 }
 
 // ═══════════════════════════════════
@@ -419,9 +498,11 @@ async function loadAllData(){
   }catch(e){
     console.error(e);
     setSyncStatus('error');
-    showErr('No se pudo conectar con Google Sheets. Verificá el Sheet ID y que sea público.');
+    showErr('No se pudo conectar con Google Sheets. Verifica el Sheet ID y que sea publico.');
     loadDemoData();
   }
+  // Load GCal in background
+  loadCalendarEvents();
 }
 
 function reloadData(){ loadAllData(); }
@@ -429,15 +510,16 @@ function reloadData(){ loadAllData(); }
 function setSyncStatus(s){
   const dot=document.getElementById('sync-dot');
   const lbl=document.getElementById('sync-label');
-  if(s==='ok'){dot.style.background='var(--green)';lbl.textContent='Datos actualizados';}
-  else if(s==='loading'){dot.style.background='var(--yellow)';lbl.textContent='Sincronizando…';}
-  else{dot.style.background='var(--red)';lbl.textContent='Error de conexión';}
+  const top=document.getElementById('topbar-sync');
+  if(s==='ok'){dot.style.background='var(--green)';lbl.textContent='Datos actualizados';if(top)top.textContent='';}
+  else if(s==='loading'){dot.style.background='var(--yellow)';lbl.textContent='Sincronizando...';if(top)top.textContent='...';}
+  else{dot.style.background='var(--red)';lbl.textContent='Error de conexion';if(top)top.textContent='!';}
 }
 
 function showErr(msg){
   ['overview','comercial','tareas','calendario'].forEach(v=>{
     const el=document.getElementById('err-'+v);
-    if(el){el.textContent='⚠ '+msg;el.style.display='block';}
+    if(el){el.textContent='Aviso: '+msg;el.style.display='block';}
   });
 }
 
@@ -447,35 +529,32 @@ function showErr(msg){
 function loadDemoData(){
   DATA.venues=[
     {Codigo:'PMH',Nombre:'Palermo Music Hall',Ciudad:'Buenos Aires',Capacidad:15000,Apertura:'Q1 2027',Inversion:'18M USD',Avance:68,NamingEstado:'Cerrado',NamingEmpresa:'Banco Galicia',ProximoHito:'Licencias municipales',FechaHito:'30 Jun',StatusObra:'En obra'},
-    {Codigo:'CBA',Nombre:'Córdoba Arena',Ciudad:'Córdoba',Capacidad:12000,Apertura:'Q3 2027',Inversion:'15M USD',Avance:45,NamingEstado:'Negociando',NamingEmpresa:'Quilmes',ProximoHito:'Estructura de techo',FechaHito:'15 Jul',StatusObra:'On track'},
-    {Codigo:'ROS',Nombre:'Arena La Nueva Rural',Ciudad:'Rosario',Capacidad:10000,Apertura:'Q4 2027',Inversion:'14M USD',Avance:31,NamingEstado:'Pendiente',NamingEmpresa:'—',ProximoHito:'Permiso ambiental',FechaHito:'22 Jul',StatusObra:'Demora'},
+    {Codigo:'CBA',Nombre:'Cordoba Arena',Ciudad:'Cordoba',Capacidad:12000,Apertura:'Q3 2027',Inversion:'15M USD',Avance:45,NamingEstado:'Negociando',NamingEmpresa:'Quilmes',ProximoHito:'Estructura de techo',FechaHito:'15 Jul',StatusObra:'On track'},
+    {Codigo:'ROS',Nombre:'Arena La Nueva Rural',Ciudad:'Rosario',Capacidad:10000,Apertura:'Q4 2027',Inversion:'14M USD',Avance:31,NamingEstado:'Pendiente',NamingEmpresa:'-',ProximoHito:'Permiso ambiental',FechaHito:'22 Jul',StatusObra:'Demora'},
   ];
   DATA.deals=[
-    {Empresa:'Banco Galicia',Venue:'PMH',Categoria:'Naming Rights',Valor:'$2.8M',Duracion:'5 años',Probabilidad:'90%',Estado:'Cerrado',ProximaAccion:'Firma contrato'},
-    {Empresa:'Claro',Venue:'PMH',Categoria:'Official',Valor:'$800K',Duracion:'3 años',Probabilidad:'75%',Estado:'Cerrado',ProximaAccion:'Revisar addenda'},
-    {Empresa:'Heineken',Venue:'PMH',Categoria:'F&B',Valor:'$500K',Duracion:'3 años',Probabilidad:'80%',Estado:'Avanzado',ProximaAccion:'Firma en julio'},
-    {Empresa:'Quilmes',Venue:'CBA',Categoria:'Naming Rights',Valor:'$1.5M',Duracion:'4 años',Probabilidad:'55%',Estado:'Negociando',ProximaAccion:'Counter-propuesta'},
-    {Empresa:'YPF',Venue:'CBA',Categoria:'Official',Valor:'$600K',Duracion:'2 años',Probabilidad:'80%',Estado:'Cerrado',ProximaAccion:'Aprobación interna'},
-    {Empresa:'Rappi',Venue:'ROS',Categoria:'F&B',Valor:'$400K',Duracion:'2 años',Probabilidad:'30%',Estado:'Prospect',ProximaAccion:'Primer meeting'},
-    {Empresa:'Acero Sur',Venue:'ROS',Categoria:'Canje materiales',Valor:'$1.2M',Duracion:'—',Probabilidad:'60%',Estado:'Negociando',ProximaAccion:'Valuar stock'},
-    {Empresa:'Personal',Venue:'ROS',Categoria:'Official',Valor:'$350K',Duracion:'3 años',Probabilidad:'25%',Estado:'Prospect',ProximaAccion:'Enviar deck'},
+    {Empresa:'Banco Galicia',Venue:'PMH',Categoria:'Naming Rights',Valor:'$2.8M',Duracion:'5 anios',Probabilidad:'90%',Estado:'Cerrado',ProximaAccion:'Firma contrato'},
+    {Empresa:'Claro',Venue:'PMH',Categoria:'Official',Valor:'$800K',Duracion:'3 anios',Probabilidad:'75%',Estado:'Cerrado',ProximaAccion:'Revisar addenda'},
+    {Empresa:'Heineken',Venue:'PMH',Categoria:'F&B',Valor:'$500K',Duracion:'3 anios',Probabilidad:'80%',Estado:'Avanzado',ProximaAccion:'Firma julio'},
+    {Empresa:'Quilmes',Venue:'CBA',Categoria:'Naming Rights',Valor:'$1.5M',Duracion:'4 anios',Probabilidad:'55%',Estado:'Negociando',ProximaAccion:'Counter-propuesta'},
+    {Empresa:'YPF',Venue:'CBA',Categoria:'Official',Valor:'$600K',Duracion:'2 anios',Probabilidad:'80%',Estado:'Cerrado',ProximaAccion:'Aprobacion interna'},
+    {Empresa:'Rappi',Venue:'ROS',Categoria:'F&B',Valor:'$400K',Duracion:'2 anios',Probabilidad:'30%',Estado:'Prospect',ProximaAccion:'Primer meeting'},
+    {Empresa:'Acero Sur',Venue:'ROS',Categoria:'Canje materiales',Valor:'$1.2M',Duracion:'-',Probabilidad:'60%',Estado:'Negociando',ProximaAccion:'Valuar stock'},
   ];
   DATA.tareas=[
     {Tarea:'Gestionar licencias municipales',Venue:'PMH',Responsable:'Turco',Categoria:'Legal',Vencimiento:'2026-06-30',Estado:'Urgente'},
     {Tarea:'Cerrar contrato Naming Galicia',Venue:'PMH',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-10',Estado:'En curso'},
-    {Tarea:'Licitación sistema de sonido',Venue:'PMH',Responsable:'Ops',Categoria:'Técnico',Vencimiento:'2026-07-31',Estado:'Pendiente'},
     {Tarea:'Counter-propuesta Quilmes',Venue:'CBA',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-15',Estado:'En curso'},
-    {Tarea:'Gestión permiso ambiental',Venue:'ROS',Responsable:'Legal',Categoria:'Legal',Vencimiento:'2026-07-22',Estado:'Urgente'},
+    {Tarea:'Gestion permiso ambiental',Venue:'ROS',Responsable:'Legal',Categoria:'Legal',Vencimiento:'2026-07-22',Estado:'Urgente'},
     {Tarea:'Definir F&B operator',Venue:'PMH',Responsable:'Ops',Categoria:'Operativo',Vencimiento:'2026-08-01',Estado:'Pendiente'},
-    {Tarea:'Enviar deck a Personal',Venue:'ROS',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-05',Estado:'Pendiente'},
   ];
   DATA.hitos=[
     {Hito:'Licencias municipales',Venue:'PMH',Fecha:'2026-06-30',Categoria:'Legal',Estado:'Urgente'},
     {Hito:'Cierre Naming Galicia',Venue:'PMH',Fecha:'2026-07-10',Categoria:'Comercial',Estado:'En curso'},
     {Hito:'Estructura de techo',Venue:'CBA',Fecha:'2026-07-15',Categoria:'Obra',Estado:'OK'},
     {Hito:'Permiso ambiental',Venue:'ROS',Fecha:'2026-07-22',Categoria:'Legal',Estado:'En riesgo'},
-    {Hito:'Presentación Directorio',Venue:'Todos',Fecha:'2026-08-01',Categoria:'Gestión',Estado:'Pendiente'},
-    {Hito:'Licitación AV Córdoba',Venue:'CBA',Fecha:'2026-08-20',Categoria:'Técnico',Estado:'Pendiente'},
+    {Hito:'Presentacion Directorio',Venue:'Todos',Fecha:'2026-08-01',Categoria:'Gestion',Estado:'Pendiente'},
+    {Hito:'Licitacion AV Cordoba',Venue:'CBA',Fecha:'2026-08-20',Categoria:'Tecnico',Estado:'Pendiente'},
   ];
   renderAll();
 }
@@ -485,18 +564,18 @@ function loadDemoData(){
 // ═══════════════════════════════════
 function venueChip(code){
   const m={PMH:'chip-pmh',CBA:'chip-cor',ROS:'chip-ros'};
-  return `<span class="chip ${m[code]||'chip-all'}">${code||'—'}</span>`;
+  return `<span class="chip ${m[code]||'chip-all'}">${code||'-'}</span>`;
 }
 function dealBadge(e){
   const m={'Cerrado':'badge-green','Avanzado':'badge-green','Cerrando':'badge-green','Activo':'badge-blue','Negociando':'badge-yellow','Prospect':'badge-gray','Cancelado':'badge-red','En riesgo':'badge-red'};
-  return `<span class="badge ${m[e]||'badge-gray'}">${e||'—'}</span>`;
+  return `<span class="badge ${m[e]||'badge-gray'}">${e||'-'}</span>`;
 }
 function hitoBadge(e){
   const m={Urgente:'badge-red','En riesgo':'badge-red','En curso':'badge-yellow',OK:'badge-green',Pendiente:'badge-gray'};
-  return `<span class="badge ${m[e]||'badge-gray'}">${e||'—'}</span>`;
+  return `<span class="badge ${m[e]||'badge-gray'}">${e||'-'}</span>`;
 }
 function duracionDue(fecha){
-  if(!fecha) return '<span style="color:var(--muted)">—</span>';
+  if(!fecha) return '<span style="color:var(--muted)">-</span>';
   const d=new Date(fecha),now=new Date();
   const diff=Math.ceil((d-now)/(1000*60*60*24));
   const fmt=d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'});
@@ -507,14 +586,20 @@ function duracionDue(fecha){
 function venueColor(c){return {PMH:'var(--pmh)',CBA:'var(--cor)',ROS:'var(--ros)'}[c]||'var(--accent)';}
 function venueFill(c){return {PMH:'fill-pmh',CBA:'fill-cor',ROS:'fill-ros'}[c]||'fill-pmh';}
 function venueTagClass(c){return {PMH:'tag-pmh',CBA:'tag-cor',ROS:'tag-ros'}[c]||'tag-pmh';}
+function isClosed(e){const s=(e||'').toLowerCase();return s==='cerrado'||s==='avanzado'||s==='cerrando';}
+function countBy(arr,field){return arr.reduce((a,i)=>{const k=i[field]||'Sin categoria';a[k]=(a[k]||0)+1;return a;},{});}
 
-function countBy(arr, field){
-  return arr.reduce((acc,item)=>{
-    const k=item[field]||'Sin categoría';
-    acc[k]=(acc[k]||0)+1;
-    return acc;
-  },{});
+function startOfWeek(d){
+  const c=new Date(d);
+  const day=c.getDay();
+  const diff=day===0?-6:1-day; // Monday
+  c.setDate(c.getDate()+diff);
+  c.setHours(0,0,0,0);
+  return c;
 }
+function addDays(d,n){const c=new Date(d);c.setDate(c.getDate()+n);return c;}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+function isToday(d){return sameDay(d,new Date());}
 
 // ═══════════════════════════════════
 // RENDER ALL
@@ -523,10 +608,11 @@ function renderAll(){
   renderOverview();
   renderComercial();
   renderTareas();
-  renderCalendario();
   ['overview','comercial','tareas','calendario'].forEach(v=>{
-    document.getElementById(v+'-loading').style.display='none';
-    document.getElementById(v+'-content').style.display='block';
+    const ld=document.getElementById(v+'-loading');
+    const ct=document.getElementById(v+'-content');
+    if(ld) ld.style.display='none';
+    if(ct) ct.style.display='block';
   });
 }
 
@@ -535,143 +621,90 @@ function renderAll(){
 // ═══════════════════════════════════
 function renderOverview(){
   const total=DATA.deals.length;
-  const cerrados=DATA.deals.filter(d=>{
-    const e=(d.Estado||'').toLowerCase();
-    return e==='cerrado'||e==='cerrando'||e==='avanzado';
-  }).length;
-  const pctCerrados=total>0?Math.round(cerrados/total*100):0;
+  const cerrados=DATA.deals.filter(d=>isClosed(d.Estado)).length;
+  const pctC=total>0?Math.round(cerrados/total*100):0;
   const avgAvance=DATA.venues.length?Math.round(DATA.venues.reduce((s,v)=>s+(+v.Avance||0),0)/DATA.venues.length):0;
   const hitosRiesgo=DATA.hitos.filter(h=>{const e=(h.Estado||'').toLowerCase();return e==='urgente'||e==='en riesgo';}).length;
 
   document.getElementById('overview-kpis').innerHTML=`
-    <div class="kpi-card">
-      <div class="kpi-label">Venues en Desarrollo</div>
-      <div class="kpi-value">${DATA.venues.length}</div>
-      <div class="kpi-sub">Under construction</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Deals Cerrados</div>
-      <div class="kpi-value" style="color:var(--green)">${pctCerrados}%</div>
-      <div class="kpi-sub">${cerrados} de ${total} acuerdos</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Avance Promedio Obra</div>
-      <div class="kpi-value" style="color:var(--yellow)">${avgAvance}%</div>
-      <div class="kpi-warn">${hitosRiesgo} hito${hitosRiesgo!==1?'s':''} en riesgo</div>
-    </div>
+    <div class="kpi-card"><div class="kpi-label">Venues en Desarrollo</div><div class="kpi-value">${DATA.venues.length}</div><div class="kpi-sub">Under construction</div></div>
+    <div class="kpi-card"><div class="kpi-label">Deals Cerrados</div><div class="kpi-value" style="color:var(--green)">${pctC}%</div><div class="kpi-sub">${cerrados} de ${total} acuerdos</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avance Promedio Obra</div><div class="kpi-value" style="color:var(--yellow)">${avgAvance}%</div><div class="kpi-warn">${hitosRiesgo} hito${hitosRiesgo!==1?'s':''} en riesgo</div></div>
   `;
 
-  // Venue cards
   document.getElementById('venue-cards').innerHTML=DATA.venues.map(v=>{
-    const statusMap={'On track':'sdot-g','En obra':'sdot-y','Demora':'sdot-r'};
-    const avance=+v.Avance||0;
-    const dealsCerrados=DATA.deals.filter(d=>d.Venue===v.Codigo&&((d.Estado||'').toLowerCase()==='cerrado'||(d.Estado||'').toLowerCase()==='avanzado'||(d.Estado||'').toLowerCase()==='cerrando')).length;
+    const sm={'On track':'sdot-g','En obra':'sdot-y','Demora':'sdot-r'};
+    const av=+v.Avance||0;
+    const dc=DATA.deals.filter(d=>d.Venue===v.Codigo&&isClosed(d.Estado)).length;
     return `
     <div class="venue-card" onclick="showVenueDetail('${v.Codigo}')">
       <div class="vc-header">
-        <div>
-          <span class="venue-tag ${venueTagClass(v.Codigo)}">${v.Codigo}</span>
-          <div class="venue-name">${v.Nombre}</div>
-          <div class="venue-loc">${v.Ciudad} · ${Number(v.Capacidad||0).toLocaleString()} cap.</div>
-        </div>
-        <div class="status-pill"><div class="sdot ${statusMap[v.StatusObra]||'sdot-y'}"></div>${v.StatusObra||'—'}</div>
+        <div><span class="venue-tag ${venueTagClass(v.Codigo)}">${v.Codigo}</span><div class="venue-name">${v.Nombre}</div><div class="venue-loc">${v.Ciudad} &middot; ${Number(v.Capacidad||0).toLocaleString()} cap.</div></div>
+        <div class="status-pill"><div class="sdot ${sm[v.StatusObra]||'sdot-y'}"></div>${v.StatusObra||'-'}</div>
       </div>
       <div class="vc-body">
-        <div class="prog-row"><span class="prog-label">Avance de obra</span><span class="prog-pct" style="color:${venueColor(v.Codigo)}">${avance}%</span></div>
-        <div class="prog-bar"><div class="prog-fill ${venueFill(v.Codigo)}" style="width:${avance}%"></div></div>
+        <div class="prog-row"><span class="prog-label">Avance de obra</span><span class="prog-pct" style="color:${venueColor(v.Codigo)}">${av}%</span></div>
+        <div class="prog-bar"><div class="prog-fill ${venueFill(v.Codigo)}" style="width:${av}%"></div></div>
         <div class="vc-metrics">
-          <div class="vm"><div class="vm-label">Naming</div><div class="vm-value" style="color:${v.NamingEstado==='Cerrado'?'var(--green)':v.NamingEstado==='Negociando'?'var(--yellow)':'var(--muted)'}">${v.NamingEstado||'—'}</div></div>
-          <div class="vm"><div class="vm-label">Apertura Est.</div><div class="vm-value">${v.Apertura||'—'}</div></div>
-          <div class="vm"><div class="vm-label">Inversión</div><div class="vm-value">${v.Inversion||'—'}</div></div>
-          <div class="vm"><div class="vm-label">Deals cerrados</div><div class="vm-value" style="color:var(--green)">${dealsCerrados}</div></div>
+          <div class="vm"><div class="vm-label">Naming</div><div class="vm-value" style="color:${v.NamingEstado==='Cerrado'?'var(--green)':v.NamingEstado==='Negociando'?'var(--yellow)':'var(--muted)'}">${v.NamingEstado||'-'}</div></div>
+          <div class="vm"><div class="vm-label">Apertura Est.</div><div class="vm-value">${v.Apertura||'-'}</div></div>
+          <div class="vm"><div class="vm-label">Inversion</div><div class="vm-value">${v.Inversion||'-'}</div></div>
+          <div class="vm"><div class="vm-label">Deals cerrados</div><div class="vm-value" style="color:var(--green)">${dc}</div></div>
         </div>
       </div>
       <div class="vc-footer">
-        <div><span class="ms-label">Próx. hito: </span><span style="font-size:11px">${v.ProximoHito||'—'} — ${v.FechaHito||'—'}</span></div>
-        <span class="view-link">Ver detalle →</span>
+        <div><span class="ms-label">Prox. hito: </span><span style="font-size:11px">${v.ProximoHito||'-'} - ${v.FechaHito||'-'}</span></div>
+        <span class="view-link">Ver detalle &rarr;</span>
       </div>
     </div>`;
   }).join('');
 
-  // Pie charts — Status Comercial
   renderPieCharts();
 
-  // Hitos criticos (solo Urgente / En riesgo)
-  const criticos=DATA.hitos
-    .filter(h=>{const e=(h.Estado||'').toLowerCase();return e==='urgente'||e==='en riesgo';})
-    .sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
+  const criticos=DATA.hitos.filter(h=>{const e=(h.Estado||'').toLowerCase();return e==='urgente'||e==='en riesgo';}).sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
   document.getElementById('tbl-hitos-criticos').innerHTML=criticos.length
-    ? criticos.map(h=>{
-        const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'—';
-        return `<tr><td>${h.Hito}</td><td>${venueChip(h.Venue)}</td><td>${d}</td><td>${hitoBadge(h.Estado)}</td></tr>`;
-      }).join('')
-    : `<tr><td class="tbl-empty" colspan="4">✓ Sin hitos urgentes o en riesgo</td></tr>`;
+    ?criticos.map(h=>{const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'–';return `<tr><td>${h.Hito}</td><td>${venueChip(h.Venue)}</td><td>${d}</td><td>${hitoBadge(h.Estado)}</td></tr>`;}).join('')
+    :`<tr><td class="tbl-empty" colspan="4">Sin hitos urgentes o en riesgo</td></tr>`;
 }
 
 // ═══════════════════════════════════
 // PIE CHARTS
 // ═══════════════════════════════════
-const PIE_COLORS = ['#4A3FD4','#7B72E8','#22C55E','#F59E0B','#EF4444','#059669','#D97706','#A78BFA','#34D399','#FCD34D'];
+const PIE_COLORS=['#4A3FD4','#7B72E8','#22C55E','#F59E0B','#EF4444','#059669','#D97706','#A78BFA','#34D399','#FCD34D'];
 
 function renderPieCharts(){
-  // Destruir charts anteriores
   Object.values(pieCharts).forEach(c=>{try{c.destroy();}catch(e){}});
   pieCharts={};
-
   const venues=DATA.venues.length?DATA.venues:[{Codigo:'PMH'},{Codigo:'CBA'},{Codigo:'ROS'}];
-  const html=venues.map(v=>{
-    const vDeals=DATA.deals.filter(d=>d.Venue===v.Codigo);
-    const byCat=countBy(vDeals,'Categoria');
-    const byStatus=countBy(vDeals,'Estado');
-    const canvasId=`pie-${v.Codigo}`;
-    const statusBoxes=Object.entries(byStatus).map(([k,n])=>`
-      <div class="status-box">
-        <div class="status-box-label">${k}</div>
-        <div class="status-box-val">${n}</div>
-      </div>`).join('');
+  document.getElementById('pie-grid').innerHTML=venues.map(v=>{
+    const vd=DATA.deals.filter(d=>d.Venue===v.Codigo);
+    const byCat=countBy(vd,'Categoria');
+    const byStatus=countBy(vd,'Estado');
+    const sb=Object.entries(byStatus).map(([k,n])=>`<div class="status-box"><div class="status-box-label">${k}</div><div class="status-box-val">${n}</div></div>`).join('');
     return `
     <div class="pie-card">
       <div class="pie-title"><span class="venue-tag ${venueTagClass(v.Codigo)}">${v.Codigo}</span>${v.Nombre||v.Codigo}</div>
-      <div class="pie-sub">${vDeals.length} acuerdo${vDeals.length!==1?'s':''} registrados</div>
-      ${vDeals.length>0?`
-      <div class="pie-wrap"><canvas id="${canvasId}"></canvas></div>
-      <div class="pie-legend" id="legend-${v.Codigo}"></div>
-      <div class="status-grid">${statusBoxes}</div>
-      `:`<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px 0">Sin deals cargados para este venue</div>`}
+      <div class="pie-sub">${vd.length} acuerdo${vd.length!==1?'s':''}</div>
+      ${vd.length>0?`<div class="pie-wrap"><canvas id="pie-${v.Codigo}"></canvas></div><div class="pie-legend" id="legend-${v.Codigo}"></div><div class="status-grid">${sb}</div>`
+      :`<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">Sin deals cargados</div>`}
     </div>`;
   }).join('');
 
-  document.getElementById('pie-grid').innerHTML=html;
-
-  // Renderizar cada canvas
   venues.forEach(v=>{
-    const vDeals=DATA.deals.filter(d=>d.Venue===v.Codigo);
-    if(!vDeals.length) return;
-    const byCat=countBy(vDeals,'Categoria');
-    const labels=Object.keys(byCat);
-    const values=Object.values(byCat);
+    const vd=DATA.deals.filter(d=>d.Venue===v.Codigo);
+    if(!vd.length) return;
+    const byCat=countBy(vd,'Categoria');
+    const labels=Object.keys(byCat),values=Object.values(byCat);
     const colors=labels.map((_,i)=>PIE_COLORS[i%PIE_COLORS.length]);
-
     const canvas=document.getElementById(`pie-${v.Codigo}`);
     if(!canvas) return;
-    const ctx=canvas.getContext('2d');
-    pieCharts[v.Codigo]=new Chart(ctx,{
+    pieCharts[v.Codigo]=new Chart(canvas.getContext('2d'),{
       type:'doughnut',
       data:{labels,datasets:[{data:values,backgroundColor:colors,borderColor:'#13151C',borderWidth:2,hoverOffset:4}]},
-      options:{
-        responsive:true,maintainAspectRatio:true,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}`}}},
-        cutout:'65%',
-      }
+      options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},cutout:'65%'}
     });
-
-    // Leyenda custom
     document.getElementById(`legend-${v.Codigo}`).innerHTML=labels.map((l,i)=>`
-      <div class="pie-legend-item">
-        <div class="pie-dot" style="background:${colors[i]}"></div>
-        <span class="pie-legend-label">${l}</span>
-        <span class="pie-legend-val">${values[i]}</span>
-      </div>`).join('');
+      <div class="pie-legend-item"><div class="pie-dot" style="background:${colors[i]}"></div><span class="pie-legend-label">${l}</span><span class="pie-legend-val">${values[i]}</span></div>`).join('');
   });
 }
 
@@ -679,61 +712,29 @@ function renderPieCharts(){
 // COMERCIAL
 // ═══════════════════════════════════
 let currentDealFilter='todos';
-
 function renderComercial(){
   const total=DATA.deals.length;
-  const cerrados=DATA.deals.filter(d=>{const e=(d.Estado||'').toLowerCase();return e==='cerrado'||e==='avanzado'||e==='cerrando';}).length;
-  const negociando=DATA.deals.filter(d=>{const e=(d.Estado||'').toLowerCase();return e==='negociando';}).length;
-  const cancelados=DATA.deals.filter(d=>{const e=(d.Estado||'').toLowerCase();return e==='cancelado';}).length;
-  const pct=(n)=>total>0?Math.round(n/total*100)+'%':'0%';
-
+  const cerrados=DATA.deals.filter(d=>isClosed(d.Estado)).length;
+  const neg=DATA.deals.filter(d=>(d.Estado||'').toLowerCase()==='negociando').length;
+  const cancel=DATA.deals.filter(d=>(d.Estado||'').toLowerCase()==='cancelado').length;
+  const pct=n=>total>0?Math.round(n/total*100)+'%':'0%';
   document.getElementById('comercial-kpis').innerHTML=`
-    <div class="kpi-card">
-      <div class="kpi-label">Total Prospects</div>
-      <div class="kpi-value" style="color:var(--pulse)">${total}</div>
-      <div class="kpi-sub">acuerdos en pipeline</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">% Cerrados</div>
-      <div class="kpi-value" style="color:var(--green)">${pct(cerrados)}</div>
-      <div class="kpi-sub">${cerrados} deal${cerrados!==1?'s':''} cerrado${cerrados!==1?'s':''}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">% En Negociación</div>
-      <div class="kpi-value" style="color:var(--yellow)">${pct(negociando)}</div>
-      <div class="kpi-sub">${negociando} en negociación</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">% Cancelados</div>
-      <div class="kpi-value" style="color:var(--red)">${pct(cancelados)}</div>
-      <div class="kpi-sub">${cancelados} cancelado${cancelados!==1?'s':''}</div>
-    </div>
+    <div class="kpi-card"><div class="kpi-label">Total Prospects</div><div class="kpi-value" style="color:var(--pulse)">${total}</div><div class="kpi-sub">acuerdos en pipeline</div></div>
+    <div class="kpi-card"><div class="kpi-label">% Cerrados</div><div class="kpi-value" style="color:var(--green)">${pct(cerrados)}</div><div class="kpi-sub">${cerrados} cerrado${cerrados!==1?'s':''}</div></div>
+    <div class="kpi-card"><div class="kpi-label">% En Negociacion</div><div class="kpi-value" style="color:var(--yellow)">${pct(neg)}</div><div class="kpi-sub">${neg} en negociacion</div></div>
+    <div class="kpi-card"><div class="kpi-label">% Cancelados</div><div class="kpi-value" style="color:var(--red)">${pct(cancel)}</div><div class="kpi-sub">${cancel} cancelado${cancel!==1?'s':''}</div></div>
   `;
   renderDealsTable();
 }
-
 function renderDealsTable(filter){
   if(filter!==undefined) currentDealFilter=filter;
   let deals=DATA.deals;
-  if(currentDealFilter!=='todos'){
-    deals=deals.filter(d=>(d.Venue||'').trim().toUpperCase()===currentDealFilter.toUpperCase());
-  }
+  if(currentDealFilter!=='todos') deals=deals.filter(d=>(d.Venue||'').trim().toUpperCase()===currentDealFilter.toUpperCase());
   document.getElementById('pipeline-count').textContent=deals.length+' acuerdos';
   document.getElementById('tbl-deals-full').innerHTML=deals.length
-    ? deals.map(d=>`
-      <tr>
-        <td><strong>${d.Empresa||'—'}</strong></td>
-        <td>${venueChip(d.Venue)}</td>
-        <td>${d.Categoria||'—'}</td>
-        <td>${d.Valor||'—'}</td>
-        <td>${d.Duracion||'—'}</td>
-        <td style="color:${parseFloat(d.Probabilidad)>70?'var(--green)':parseFloat(d.Probabilidad)>40?'var(--yellow)':'var(--muted)'}">${d.Probabilidad||'—'}</td>
-        <td>${dealBadge(d.Estado)}</td>
-        <td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'—'}</td>
-      </tr>`).join('')
-    : `<tr><td class="tbl-empty" colspan="8">Sin acuerdos para este filtro</td></tr>`;
+    ?deals.map(d=>`<tr><td><strong>${d.Empresa||'-'}</strong></td><td>${venueChip(d.Venue)}</td><td>${d.Categoria||'-'}</td><td>${d.Valor||'-'}</td><td>${d.Duracion||'-'}</td><td style="color:${parseFloat(d.Probabilidad)>70?'var(--green)':parseFloat(d.Probabilidad)>40?'var(--yellow)':'var(--muted)'}">${d.Probabilidad||'-'}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'-'}</td></tr>`).join('')
+    :`<tr><td class="tbl-empty" colspan="8">Sin acuerdos para este filtro</td></tr>`;
 }
-
 function filterDeals(f,btn){
   document.querySelectorAll('#comercial-filters .filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -744,7 +745,6 @@ function filterDeals(f,btn){
 // TAREAS
 // ═══════════════════════════════════
 let currentTareaFilter='todas';
-
 function renderTareas(filter){
   if(filter!==undefined) currentTareaFilter=filter;
   let tareas=[...DATA.tareas];
@@ -753,18 +753,9 @@ function renderTareas(filter){
   tareas.sort((a,b)=>new Date(a.Vencimiento)-new Date(b.Vencimiento));
   document.getElementById('tareas-count').textContent=tareas.length+' tareas';
   document.getElementById('tbl-tareas').innerHTML=tareas.length
-    ? tareas.map(t=>`
-      <tr>
-        <td>${t.Tarea||'—'}</td>
-        <td>${venueChip(t.Venue)}</td>
-        <td>${t.Responsable||'—'}</td>
-        <td style="color:var(--secondary);font-size:11px">${t.Categoria||'—'}</td>
-        <td>${duracionDue(t.Vencimiento)}</td>
-        <td>${hitoBadge(t.Estado)}</td>
-      </tr>`).join('')
-    : `<tr><td class="tbl-empty" colspan="6">Sin tareas para este filtro</td></tr>`;
+    ?tareas.map(t=>`<tr><td>${t.Tarea||'-'}</td><td>${venueChip(t.Venue)}</td><td>${t.Responsable||'-'}</td><td style="color:var(--secondary)">${t.Categoria||'-'}</td><td>${duracionDue(t.Vencimiento)}</td><td>${hitoBadge(t.Estado)}</td></tr>`).join('')
+    :`<tr><td class="tbl-empty" colspan="6">Sin tareas para este filtro</td></tr>`;
 }
-
 function filterTareas(f,btn){
   document.querySelectorAll('#view-tareas .filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -772,99 +763,164 @@ function filterTareas(f,btn){
 }
 
 // ═══════════════════════════════════
-// CALENDARIO
+// GOOGLE CALENDAR FETCH
 // ═══════════════════════════════════
-function renderCalendario(){
-  // Hitos del Sheet
-  const hitos=[...DATA.hitos].sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
-  const byMonth={};
-  hitos.forEach(h=>{
-    const d=h.Fecha?new Date(h.Fecha):null;
-    if(!d||isNaN(d)) return;
-    const key=d.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
-    if(!byMonth[key]) byMonth[key]=[];
-    byMonth[key].push({...h,_date:d});
-  });
-  const barClass={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y',OK:'cal-bar-g',Pendiente:'cal-bar-b'};
-  let html='<div class="three-col">';
-  Object.entries(byMonth).forEach(([month,items])=>{
-    html+=`<div class="month-block"><div class="month-title">${month.charAt(0).toUpperCase()+month.slice(1)}</div>`;
-    items.forEach(h=>{
-      const d=h._date.toLocaleDateString('es-AR',{day:'2-digit',month:'short'});
-      html+=`
-      <div class="cal-item">
-        <div class="cal-bar ${barClass[h.Estado]||'cal-bar-b'}"></div>
-        <div>
-          <div class="cal-title">${h.Hito} ${venueChip(h.Venue)}</div>
-          <div class="cal-meta">${d} · ${h.Categoria||''} · ${hitoBadge(h.Estado)}</div>
-        </div>
-      </div>`;
-    });
-    html+='</div>';
-  });
-  html+='</div>';
-  if(!Object.keys(byMonth).length) html='<div style="color:var(--muted);padding:20px 0;font-size:12px">Sin hitos cargados en el Sheet</div>';
-  document.getElementById('calendario-months').innerHTML=html;
-
-  // Google Calendar via Apps Script proxy
-  loadCalendarEvents();
-}
-
 async function loadCalendarEvents(){
-  const gcalLoading=document.getElementById('gcal-loading');
-  const gcalList=document.getElementById('gcal-list');
-  const gcalSync=document.getElementById('gcal-sync');
-  gcalLoading.style.display='block';
-  gcalList.style.display='none';
-  gcalSync.textContent='Sincronizando...';
-  gcalSync.style.color='var(--yellow)';
-
+  const statusEl=document.getElementById('gcal-status');
+  if(statusEl) statusEl.textContent='Cargando Google Calendar...';
   try{
     const res=await fetch(CALENDAR_PROXY);
     const data=await res.json();
     if(data.status!=='ok') throw new Error(data.message||'Error del proxy');
-
-    const events=data.events||[];
-    gcalSync.textContent=events.length+' reunion'+(events.length!==1?'es':'')+ ' encontrada'+(events.length!==1?'s':'');
-    gcalSync.style.color='var(--green)';
-
-    if(!events.length){
-      gcalList.innerHTML=`<div style="padding:20px 18px;color:var(--muted);font-size:12px">No hay reuniones con "VENUES" en el titulo en los proximos 3 meses</div>`;
-    } else {
-      gcalList.innerHTML=events.map(e=>{
-        const start=new Date(e.date);
-        const day=start.getDate();
-        const month=start.toLocaleDateString('es-AR',{month:'short'}).toUpperCase();
-        const time=e.allDay?'Todo el dia':start.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-        const dateStr=start.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
-        return `
-        <div class="show-item" style="padding:12px 18px">
-          <div style="background:var(--surface2);border-radius:7px;padding:6px 10px;text-align:center;min-width:44px;flex-shrink:0">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;line-height:1">${day}</div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;margin-top:1px">${month}</div>
-          </div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:500">${e.title}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px">
-              ${dateStr} · ${time}
-              ${e.location?` · ${e.location}`:''}
-            </div>
-            ${e.description?`<div style="font-size:11px;color:var(--secondary);margin-top:3px">${e.description.substring(0,80)}${e.description.length>80?'...':''}</div>`:''}
-          </div>
-          <span class="badge badge-blue">VENUES</span>
-        </div>`;
-      }).join('');
-    }
-
-    gcalLoading.style.display='none';
-    gcalList.style.display='block';
-
+    GCAL_EVENTS=data.events||[];
+    if(statusEl) statusEl.textContent=GCAL_EVENTS.length+' reunion'+(GCAL_EVENTS.length!==1?'es':'')+' VENUES';
+    // Re-render agenda if it's visible
+    if(document.getElementById('view-calendario').classList.contains('active')) renderAgenda();
   }catch(err){
-    console.error('Calendar error:',err);
-    gcalSync.textContent='Error al cargar';
-    gcalSync.style.color='var(--red)';
-    gcalLoading.innerHTML=`<div style="color:var(--red);font-size:12px;padding:0 0 8px 0">No se pudo conectar con Google Calendar: ${err.message}</div>`;
+    console.error('GCal error:',err);
+    if(statusEl) statusEl.textContent='Sin conexion a Google Calendar';
   }
+}
+
+// ═══════════════════════════════════
+// AGENDA CALENDAR
+// ═══════════════════════════════════
+function agendaMove(dir){
+  if(agendaView==='week'){
+    agendaAnchor=addDays(agendaAnchor,dir*7);
+  } else {
+    const d=new Date(agendaAnchor);
+    d.setMonth(d.getMonth()+dir);
+    d.setDate(1);
+    agendaAnchor=d;
+  }
+  renderAgenda();
+}
+function agendaToday(){
+  agendaAnchor=agendaView==='week'?startOfWeek(new Date()):new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  renderAgenda();
+}
+function setAgendaView(v,btn){
+  agendaView=v;
+  document.querySelectorAll('.agenda-view-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(v==='month'){
+    const n=new Date();
+    agendaAnchor=new Date(n.getFullYear(),n.getMonth(),1);
+  } else {
+    agendaAnchor=startOfWeek(new Date());
+  }
+  renderAgenda();
+}
+
+function renderAgenda(){
+  // Build list of days to show
+  let days=[];
+  if(agendaView==='week'){
+    const mon=startOfWeek(agendaAnchor);
+    for(let i=0;i<7;i++) days.push(addDays(mon,i));
+    const end=days[6];
+    const s=days[0].toLocaleDateString('es-AR',{day:'numeric',month:'long'});
+    const e=end.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('agenda-period').textContent=s+' – '+e;
+  } else {
+    const year=agendaAnchor.getFullYear(),month=agendaAnchor.getMonth();
+    const total=new Date(year,month+1,0).getDate();
+    for(let i=1;i<=total;i++) days.push(new Date(year,month,i));
+    document.getElementById('agenda-period').textContent=new Date(year,month,1).toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase());
+  }
+
+  // Map hitos by date
+  const hitosByDay={};
+  DATA.hitos.forEach(h=>{
+    if(!h.Fecha) return;
+    const d=new Date(h.Fecha);
+    if(isNaN(d)) return;
+    const k=d.toDateString();
+    if(!hitosByDay[k]) hitosByDay[k]=[];
+    hitosByDay[k].push(h);
+  });
+
+  // Map gcal events by date
+  const gcalByDay={};
+  GCAL_EVENTS.forEach(e=>{
+    const d=new Date(e.date);
+    const k=d.toDateString();
+    if(!gcalByDay[k]) gcalByDay[k]=[];
+    gcalByDay[k].push(e);
+  });
+
+  const DAYS_ES=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+  const barClass={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y',OK:'cal-bar-g',Pendiente:'cal-bar-b'};
+
+  let html='';
+  days.forEach(day=>{
+    const dk=day.toDateString();
+    const hitos=hitosByDay[dk]||[];
+    const gcal=gcalByDay[dk]||[];
+    const hasEvents=hitos.length||gcal.length;
+
+    // In week view show all days; in month view skip empty days
+    if(agendaView==='month'&&!hasEvents) return;
+
+    const todayCls=isToday(day)?' today':'';
+    const dayName=DAYS_ES[day.getDay()];
+    const dayNum=day.getDate();
+    const monthStr=day.toLocaleDateString('es-AR',{month:'short'});
+
+    // Build badges for header
+    let badges='';
+    if(gcal.length) badges+=`<span class="badge badge-blue" style="font-size:9px">${gcal.length} reunion${gcal.length!==1?'es':''}</span>`;
+    if(hitos.length) badges+=`<span class="badge badge-gray" style="font-size:9px">${hitos.length} hito${hitos.length!==1?'s':''}</span>`;
+
+    html+=`<div class="agenda-day${todayCls}">
+      <div class="agenda-day-header">
+        <div class="agenda-day-number">${dayNum}</div>
+        <div><div class="agenda-day-name">${dayName} ${agendaView==='month'?monthStr:''}</div></div>
+        <div class="agenda-day-badges">${badges}</div>
+      </div>`;
+
+    if(!hasEvents){
+      html+=`<div class="agenda-empty">Sin eventos</div>`;
+    } else {
+      // Google Calendar events first
+      if(gcal.length){
+        gcal.forEach(e=>{
+          const d=new Date(e.date);
+          const time=e.allDay?'Todo el dia':d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+          html+=`
+          <div class="agenda-event">
+            <div class="agenda-event-bar" style="background:var(--accent)"></div>
+            <div class="agenda-event-time">${time}</div>
+            <div class="agenda-event-body">
+              <div class="agenda-event-title">${e.title}</div>
+              ${e.location?`<div class="agenda-event-meta">${e.location}</div>`:''}
+              ${e.description?`<div class="agenda-event-meta">${e.description.substring(0,60)}${e.description.length>60?'...':''}</div>`:''}
+            </div>
+            <span class="agenda-event-type type-gcal">Reunion</span>
+          </div>`;
+        });
+      }
+      // Hitos
+      hitos.forEach(h=>{
+        const bc={Urgente:'var(--red)','En riesgo':'var(--red)','En curso':'var(--yellow)',OK:'var(--green)',Pendiente:'var(--muted)'};
+        html+=`
+        <div class="agenda-event">
+          <div class="agenda-event-bar" style="background:${bc[h.Estado]||'var(--muted)'}"></div>
+          <div class="agenda-event-time">${venueChip(h.Venue)}</div>
+          <div class="agenda-event-body">
+            <div class="agenda-event-title">${h.Hito}</div>
+            <div class="agenda-event-meta">${h.Categoria||''}</div>
+          </div>
+          <span class="agenda-event-type type-hito">${hitoBadge(h.Estado)}</span>
+        </div>`;
+      });
+    }
+    html+='</div>';
+  });
+
+  if(!html) html=`<div class="loading" style="padding:40px 0;color:var(--muted)">Sin eventos en este periodo</div>`;
+  document.getElementById('agenda-body').innerHTML=html;
 }
 
 // ═══════════════════════════════════
@@ -875,56 +931,48 @@ function renderVenueDetail(code){
   const deals=DATA.deals.filter(d=>d.Venue===code);
   const tareas=DATA.tareas.filter(t=>t.Venue===code);
   const hitos=DATA.hitos.filter(h=>h.Venue===code||h.Venue==='Todos');
-  const avance=+v.Avance||0;
-  const dealsCerrados=deals.filter(d=>{const e=(d.Estado||'').toLowerCase();return e==='cerrado'||e==='avanzado'||e==='cerrando';}).length;
+  const av=+v.Avance||0;
+  const dc=deals.filter(d=>isClosed(d.Estado)).length;
+
+  const barClass={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y',OK:'cal-bar-g',Pendiente:'cal-bar-b'};
 
   document.getElementById('venue-detail-content').innerHTML=`
   <div>
-    <span class="venue-tag ${venueTagClass(code)}" style="margin-bottom:10px;display:inline-block">${code} · ${v.Ciudad||''}</span>
+    <span class="venue-tag ${venueTagClass(code)}" style="margin-bottom:10px;display:inline-block">${code} &middot; ${v.Ciudad||''}</span>
     <div class="detail-title">${v.Nombre}</div>
     <div class="detail-meta">
       <span>${Number(v.Capacidad||0).toLocaleString()} cap.</span>
-      <span>Apertura: ${v.Apertura||'—'}</span>
-      <span>Inversión: ${v.Inversion||'—'}</span>
-      <span>${v.StatusObra||'—'}</span>
+      <span>Apertura: ${v.Apertura||'-'}</span>
+      <span>Inversion: ${v.Inversion||'-'}</span>
+      <span>${v.StatusObra||'-'}</span>
     </div>
   </div>
   <div class="detail-grid">
     <div>
       <div class="card">
         <div class="card-header">Acuerdos Comerciales <span class="card-sub">${deals.length} registrados</span></div>
-        <table class="tbl">
-          <thead><tr><th>Empresa</th><th>Categoría</th><th>Valor</th><th>Estado</th><th>Próx. acción</th></tr></thead>
-          <tbody>${deals.length
-            ?deals.map(d=>`<tr><td><strong>${d.Empresa||'—'}</strong></td><td>${d.Categoria||'—'}</td><td>${d.Valor||'—'}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'—'}</td></tr>`).join('')
-            :'<tr><td class="tbl-empty" colspan="5">Sin acuerdos cargados</td></tr>'}</tbody>
-        </table>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Empresa</th><th>Categoria</th><th>Valor</th><th>Estado</th><th>Prox. accion</th></tr></thead>
+        <tbody>${deals.length?deals.map(d=>`<tr><td><strong>${d.Empresa||'-'}</strong></td><td>${d.Categoria||'-'}</td><td>${d.Valor||'-'}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'-'}</td></tr>`).join(''):'<tr><td class="tbl-empty" colspan="5">Sin acuerdos cargados</td></tr>'}</tbody>
+        </table></div>
       </div>
       <div class="card">
         <div class="card-header">Tareas <span class="card-sub">${tareas.length} activas</span></div>
-        <table class="tbl">
-          <thead><tr><th>Tarea</th><th>Responsable</th><th>Categoría</th><th>Vencimiento</th><th>Estado</th></tr></thead>
-          <tbody>${tareas.length
-            ?tareas.map(t=>`<tr><td>${t.Tarea||'—'}</td><td>${t.Responsable||'—'}</td><td>${t.Categoria||'—'}</td><td>${duracionDue(t.Vencimiento)}</td><td>${hitoBadge(t.Estado)}</td></tr>`).join('')
-            :'<tr><td class="tbl-empty" colspan="5">Sin tareas cargadas</td></tr>'}</tbody>
-        </table>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tarea</th><th>Responsable</th><th>Categoria</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+        <tbody>${tareas.length?tareas.map(t=>`<tr><td>${t.Tarea||'-'}</td><td>${t.Responsable||'-'}</td><td>${t.Categoria||'-'}</td><td>${duracionDue(t.Vencimiento)}</td><td>${hitoBadge(t.Estado)}</td></tr>`).join(''):'<tr><td class="tbl-empty" colspan="5">Sin tareas cargadas</td></tr>'}</tbody>
+        </table></div>
       </div>
     </div>
     <div>
-      <div class="sk"><div class="sk-label">Avance de Obra</div><div class="sk-value" style="color:${venueColor(code)}">${avance}%</div><div class="prog-bar" style="margin-top:8px"><div class="prog-fill ${venueFill(code)}" style="width:${avance}%"></div></div></div>
-      <div class="sk"><div class="sk-label">Naming Rights</div><div class="sk-value" style="color:${v.NamingEstado==='Cerrado'?'var(--green)':'var(--yellow)'}">${v.NamingEstado||'—'}</div><div class="sk-sub">${v.NamingEmpresa||'Sin empresa asignada'}</div></div>
-      <div class="sk"><div class="sk-label">Deals Cerrados</div><div class="sk-value" style="color:var(--green)">${dealsCerrados}</div><div class="sk-sub">de ${deals.length} total</div></div>
-      <div class="sk"><div class="sk-label">Apertura Estimada</div><div class="sk-value">${v.Apertura||'—'}</div></div>
-      <div class="sk"><div class="sk-label">Próximo Hito</div><div class="sk-value" style="font-size:14px;margin-top:2px">${v.ProximoHito||'—'}</div><div class="sk-sub">${v.FechaHito||''}</div></div>
+      <div class="sk"><div class="sk-label">Avance de Obra</div><div class="sk-value" style="color:${venueColor(code)}">${av}%</div><div class="prog-bar" style="margin-top:8px"><div class="prog-fill ${venueFill(code)}" style="width:${av}%"></div></div></div>
+      <div class="sk"><div class="sk-label">Naming Rights</div><div class="sk-value" style="color:${v.NamingEstado==='Cerrado'?'var(--green)':'var(--yellow)'}">${v.NamingEstado||'-'}</div><div class="sk-sub">${v.NamingEmpresa||'Sin empresa asignada'}</div></div>
+      <div class="sk"><div class="sk-label">Deals Cerrados</div><div class="sk-value" style="color:var(--green)">${dc}</div><div class="sk-sub">de ${deals.length} total</div></div>
+      <div class="sk"><div class="sk-label">Apertura Estimada</div><div class="sk-value">${v.Apertura||'-'}</div></div>
       <div class="section-card" style="margin-top:0">
         <div class="sc-title">Hitos del Venue</div>
-        ${hitos.length
-          ?hitos.map(h=>{
-              const bc={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y',OK:'cal-bar-g',Pendiente:'cal-bar-b'};
-              const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'—';
-              return `<div class="cal-item"><div class="cal-bar ${bc[h.Estado]||'cal-bar-b'}"></div><div><div class="cal-title" style="font-size:11px">${h.Hito}</div><div class="cal-meta">${d} · ${hitoBadge(h.Estado)}</div></div></div>`;
-            }).join('')
-          :'<div style="color:var(--muted);font-size:12px">Sin hitos cargados</div>'}
+        ${hitos.length?hitos.map(h=>{
+          const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'–';
+          return `<div class="cal-item"><div class="cal-bar ${barClass[h.Estado]||'cal-bar-b'}"></div><div><div class="cal-title" style="font-size:11px">${h.Hito}</div><div class="cal-meta">${d} &middot; ${hitoBadge(h.Estado)}</div></div></div>`;
+        }).join(''):'<div style="color:var(--muted);font-size:12px">Sin hitos cargados</div>'}
       </div>
     </div>
   </div>`;
