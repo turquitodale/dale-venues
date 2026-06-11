@@ -608,6 +608,7 @@ function renderAll(){
   renderOverview();
   renderComercial();
   renderTareas();
+  renderAgenda();
   ['overview','comercial','tareas','calendario'].forEach(v=>{
     const ld=document.getElementById(v+'-loading');
     const ct=document.getElementById(v+'-content');
