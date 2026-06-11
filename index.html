@@ -318,11 +318,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- CALENDARIO -->
     <div class="view" id="view-calendario">
       <div class="page-header">
-        <div><div class="page-title">Calendario de Hitos</div><div class="page-sub">Hitos críticos y deadlines de los 3 venues</div></div>
+        <div><div class="page-title">Calendario</div><div class="page-sub">Reuniones VENUES de Google Calendar + Hitos del proyecto</div></div>
+        <button class="btn btn-ghost" onclick="loadCalendarEvents()">&#8635; Actualizar calendario</button>
       </div>
       <div class="error-banner" id="err-calendario"></div>
-      <div id="calendario-loading" class="loading"><div class="spinner"></div>Cargando…</div>
+      <div id="calendario-loading" class="loading"><div class="spinner"></div>Cargando...</div>
       <div id="calendario-content" style="display:none">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            Google Calendar <span class="card-sub">reuniones con "VENUES" en el titulo - proximos 3 meses</span>
+            <div id="gcal-sync" style="font-size:11px;color:var(--muted)">Cargando...</div>
+          </div>
+          <div id="gcal-loading" style="padding:20px 18px;color:var(--muted);font-size:12px">Conectando con Google Calendar...</div>
+          <div id="gcal-list" style="display:none"></div>
+        </div>
+        <div style="font-size:15px;font-weight:600;font-family:'Space Grotesk',sans-serif;margin-bottom:14px">Hitos del Proyecto</div>
         <div id="calendario-months"></div>
       </div>
     </div>
@@ -343,6 +353,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 // ═══════════════════════════════════
 const SHEET_ID = '12JdkxYH-TObsyNsrgvPq5Jz9EQvkJQqpPmNk3TrGNSU';
 const PASSWORD = 'dp2026';
+const CALENDAR_PROXY = 'https://script.google.com/macros/s/AKfycbzt9q8O8k1YYpLskqigPa7jO25L08kYzMfcGreHBNu1gq-9a0pg-ow7Y4l98QqjmtY/exec';
 
 let DATA = {venues:[],deals:[],tareas:[],hitos:[]};
 let pieCharts = {};
@@ -764,6 +775,7 @@ function filterTareas(f,btn){
 // CALENDARIO
 // ═══════════════════════════════════
 function renderCalendario(){
+  // Hitos del Sheet
   const hitos=[...DATA.hitos].sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
   const byMonth={};
   hitos.forEach(h=>{
@@ -791,8 +803,68 @@ function renderCalendario(){
     html+='</div>';
   });
   html+='</div>';
-  if(!Object.keys(byMonth).length) html='<div class="loading" style="padding:40px 0">Sin hitos cargados en el Sheet</div>';
+  if(!Object.keys(byMonth).length) html='<div style="color:var(--muted);padding:20px 0;font-size:12px">Sin hitos cargados en el Sheet</div>';
   document.getElementById('calendario-months').innerHTML=html;
+
+  // Google Calendar via Apps Script proxy
+  loadCalendarEvents();
+}
+
+async function loadCalendarEvents(){
+  const gcalLoading=document.getElementById('gcal-loading');
+  const gcalList=document.getElementById('gcal-list');
+  const gcalSync=document.getElementById('gcal-sync');
+  gcalLoading.style.display='block';
+  gcalList.style.display='none';
+  gcalSync.textContent='Sincronizando...';
+  gcalSync.style.color='var(--yellow)';
+
+  try{
+    const res=await fetch(CALENDAR_PROXY);
+    const data=await res.json();
+    if(data.status!=='ok') throw new Error(data.message||'Error del proxy');
+
+    const events=data.events||[];
+    gcalSync.textContent=events.length+' reunion'+(events.length!==1?'es':'')+ ' encontrada'+(events.length!==1?'s':'');
+    gcalSync.style.color='var(--green)';
+
+    if(!events.length){
+      gcalList.innerHTML=`<div style="padding:20px 18px;color:var(--muted);font-size:12px">No hay reuniones con "VENUES" en el titulo en los proximos 3 meses</div>`;
+    } else {
+      gcalList.innerHTML=events.map(e=>{
+        const start=new Date(e.date);
+        const day=start.getDate();
+        const month=start.toLocaleDateString('es-AR',{month:'short'}).toUpperCase();
+        const time=e.allDay?'Todo el dia':start.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+        const dateStr=start.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+        return `
+        <div class="show-item" style="padding:12px 18px">
+          <div style="background:var(--surface2);border-radius:7px;padding:6px 10px;text-align:center;min-width:44px;flex-shrink:0">
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;line-height:1">${day}</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;margin-top:1px">${month}</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${e.title}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">
+              ${dateStr} · ${time}
+              ${e.location?` · ${e.location}`:''}
+            </div>
+            ${e.description?`<div style="font-size:11px;color:var(--secondary);margin-top:3px">${e.description.substring(0,80)}${e.description.length>80?'...':''}</div>`:''}
+          </div>
+          <span class="badge badge-blue">VENUES</span>
+        </div>`;
+      }).join('');
+    }
+
+    gcalLoading.style.display='none';
+    gcalList.style.display='block';
+
+  }catch(err){
+    console.error('Calendar error:',err);
+    gcalSync.textContent='Error al cargar';
+    gcalSync.style.color='var(--red)';
+    gcalLoading.innerHTML=`<div style="color:var(--red);font-size:12px;padding:0 0 8px 0">No se pudo conectar con Google Calendar: ${err.message}</div>`;
+  }
 }
 
 // ═══════════════════════════════════
