@@ -4,112 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>dale.venues</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js">
-// ═══════════════════════════════════
-// COMMENTS
-// ═══════════════════════════════════
-let COMMENTS = [];
-let currentCommentContext = {seccion:'', referencia:''};
-
-async function loadComments(){
-  try{
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Comentarios`;
-    const res=await fetch(url);
-    const text=await res.text();
-    const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-    const cols=json.table.cols.map(c=>c.label);
-    COMMENTS=(json.table.rows||[]).map(r=>{
-      const obj={};
-      cols.forEach((c,i)=>{obj[c]=r.c&&r.c[i]?r.c[i].v:null;});
-      return obj;
-    }).filter(r=>r.Comentario);
-  }catch(e){
-    COMMENTS=[];
-  }
-}
-
-function openComments(seccion, referencia){
-  currentCommentContext={seccion, referencia};
-  document.getElementById('comment-panel-title').textContent='Comentarios — '+seccion;
-  document.getElementById('comment-panel-ref').textContent=referencia!=='General'?referencia:'';
-  document.getElementById('comment-overlay').classList.add('open');
-  renderCommentList(seccion, referencia);
-}
-
-function closeCommentPanel(){
-  document.getElementById('comment-overlay').classList.remove('open');
-}
-
-function closeComments(e){
-  if(e.target===document.getElementById('comment-overlay')) closeCommentPanel();
-}
-
-function renderCommentList(seccion, referencia){
-  const list=document.getElementById('comment-list');
-  const filtered=COMMENTS.filter(c=>
-    (!seccion||c.Seccion===seccion)
-  );
-  if(!filtered.length){
-    list.innerHTML='<div class="comment-empty">Sin comentarios todavia.<br>Se el primero en comentar.</div>';
-    return;
-  }
-  list.innerHTML=filtered.reverse().map(c=>`
-    <div class="comment-item">
-      <div class="comment-item-header">
-        <span class="comment-author">${c.Autor||'Anonimo'}</span>
-        <span class="comment-date">${c.Fecha||''}</span>
-      </div>
-      <div class="comment-text">${c.Comentario}</div>
-      ${c.Referencia&&c.Referencia!=='-'?`<div style="font-size:10px;color:var(--muted);margin-top:4px">${c.Seccion} &middot; ${c.Referencia}</div>`:''}
-    </div>
-  `).join('');
-}
-
-async function submitComment(){
-  const autor=document.getElementById('comment-autor').value.trim();
-  const texto=document.getElementById('comment-texto').value.trim();
-  if(!texto){
-    document.getElementById('comment-texto').focus();
-    return;
-  }
-  const btn=document.getElementById('comment-submit-btn');
-  const sending=document.getElementById('comment-sending');
-  btn.disabled=true;
-  btn.style.display='none';
-  sending.style.display='block';
-
-  try{
-    await fetch(CALENDAR_PROXY, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        autor: autor||'Anonimo',
-        seccion: currentCommentContext.seccion,
-        referencia: currentCommentContext.referencia,
-        comentario: texto
-      }),
-      mode:'no-cors'
-    });
-    // Add optimistically to local list
-    COMMENTS.push({
-      Fecha: new Date().toLocaleString('es-AR'),
-      Autor: autor||'Anonimo',
-      Seccion: currentCommentContext.seccion,
-      Referencia: currentCommentContext.referencia,
-      Comentario: texto
-    });
-    document.getElementById('comment-autor').value='';
-    document.getElementById('comment-texto').value='';
-    renderCommentList(currentCommentContext.seccion, currentCommentContext.referencia);
-  }catch(e){
-    console.error('Comment error:',e);
-  }
-  btn.disabled=false;
-  btn.style.display='block';
-  sending.style.display='none';
-}
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -117,15 +12,14 @@ async function submitComment(){
   --bg:#0B0C10;--surface:#13151C;--surface2:#1A1D28;--border:#252836;
   --accent:#4A3FD4;--pulse:#7B72E8;--green:#22C55E;--yellow:#F59E0B;--red:#EF4444;
   --text:#F2F0EB;--muted:#6B7280;--secondary:#9CA3AF;
-  --pmh:#4A3FD4;--cor:#059669;--ros:#D97706;
-  --sidebar-w:220px;
+  --pmh:#4A3FD4;--cor:#059669;--ros:#D97706;--sidebar-w:220px;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;width:100%;}
 html{overflow-x:hidden;width:100%;}
 ::-webkit-scrollbar{display:none;}
 *{scrollbar-width:none;-ms-overflow-style:none;}
 
-/* ── LOGIN ── */
+/* LOGIN */
 #login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;}
 .login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:340px;text-align:center;}
 .login-logo{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;}
@@ -137,17 +31,17 @@ html{overflow-x:hidden;width:100%;}
 .login-box button:hover{background:var(--pulse);}
 .login-error{font-size:12px;color:var(--red);margin-top:8px;display:none;}
 
-/* ── APP SHELL ── */
+/* SHELL */
 #app{display:none;}
 .shell{display:flex;height:100vh;overflow:hidden;position:relative;}
 
-/* ── MOBILE TOPBAR (hidden on desktop) ── */
+/* TOPBAR MOBILE */
 .topbar{display:none;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;flex-shrink:0;}
 .topbar-logo{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;}
 .topbar-logo span{color:var(--accent);}
 .hamburger{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:6px;line-height:1;}
 
-/* ── SIDEBAR ── */
+/* SIDEBAR */
 .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;transition:transform 0.25s ease;z-index:300;}
 .sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;}
 .sidebar-logo span{color:var(--accent);}
@@ -163,7 +57,7 @@ html{overflow-x:hidden;width:100%;}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:290;}
 
-/* ── MAIN ── */
+/* MAIN */
 .main{flex:1;overflow-y:auto;padding:28px 32px;min-width:0;}
 .view{display:none;}
 .view.active{display:block;}
@@ -171,13 +65,13 @@ html{overflow-x:hidden;width:100%;}
 .page-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.3px;}
 .page-sub{font-size:12px;color:var(--muted);margin-top:3px;}
 
-/* ── LOADING ── */
+/* LOADING */
 .loading{text-align:center;padding:60px 0;color:var(--muted);font-size:13px;}
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .error-banner{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:12px;display:none;}
 
-/* ── KPI ── */
+/* KPI */
 .kpi-row{display:grid;gap:12px;margin-bottom:24px;}
 .kpi-3{grid-template-columns:repeat(3,1fr);}
 .kpi-4{grid-template-columns:repeat(4,1fr);}
@@ -187,7 +81,7 @@ html{overflow-x:hidden;width:100%;}
 .kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
 .kpi-warn{font-size:11px;color:var(--yellow);margin-top:4px;}
 
-/* ── VENUE CARDS ── */
+/* VENUE CARDS */
 .venue-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
 .venue-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color 0.15s,transform 0.15s;}
 .venue-card:hover{border-color:var(--pulse);transform:translateY(-2px);}
@@ -220,7 +114,7 @@ html{overflow-x:hidden;width:100%;}
 .ms-label{color:var(--muted);font-size:11px;}
 .view-link{font-size:11px;color:var(--pulse);cursor:pointer;}
 
-/* ── CARDS & TABLES ── */
+/* CARDS & TABLES */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;}
 .card-header{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
 .card-sub{font-size:11px;color:var(--muted);font-weight:400;margin-left:4px;}
@@ -234,7 +128,7 @@ html{overflow-x:hidden;width:100%;}
 .tbl tr:hover td{background:var(--surface2);}
 .tbl-empty{color:var(--muted);text-align:center;padding:30px!important;font-size:12px;}
 
-/* ── CHIPS & BADGES ── */
+/* CHIPS & BADGES */
 .chip{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
 .chip-pmh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
 .chip-cor{background:rgba(5,150,105,0.2);color:#6EE7B7;}
@@ -247,11 +141,11 @@ html{overflow-x:hidden;width:100%;}
 .badge-blue{background:rgba(74,63,212,0.2);color:#A5A0F5;}
 .badge-gray{background:rgba(107,114,128,0.2);color:#9CA3AF;}
 
-/* ── LAYOUTS ── */
+/* LAYOUTS */
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 
-/* ── PIE CHARTS ── */
+/* PIE CHARTS */
 .pie-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
 .pie-card{background:var(--surface2);border-radius:10px;padding:16px;}
 .pie-title{font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
@@ -267,9 +161,9 @@ html{overflow-x:hidden;width:100%;}
 .status-box-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;}
 .status-box-val{font-size:14px;font-weight:700;margin-top:2px;font-family:'Space Grotesk',sans-serif;}
 
-/* ── DETAIL ── */
-.back-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:none;border:none;font-family:'Inter',sans-serif;}
-.back-btn:hover{color:var(--text);}
+/* DETAIL */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:none;border:none;font-family:'Inter',sans-serif;padding:7px 14px;border-radius:7px;border:1px solid var(--border);}
+.back-btn:hover{color:var(--text);border-color:var(--pulse);}
 .detail-title{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.4px;}
 .detail-meta{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap;}
 .detail-grid{display:grid;grid-template-columns:3fr 1fr;gap:16px;margin-top:20px;}
@@ -280,7 +174,7 @@ html{overflow-x:hidden;width:100%;}
 .sk-value{font-size:18px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
 .sk-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 
-/* ── FILTERS ── */
+/* FILTERS */
 .filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
 .filter-btn{padding:5px 12px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.12s;}
 .filter-btn:hover,.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
@@ -289,7 +183,7 @@ html{overflow-x:hidden;width:100%;}
 .due-soon{background:rgba(245,158,11,0.12);color:var(--yellow);}
 .due-ok{background:rgba(34,197,94,0.1);color:var(--green);}
 
-/* ── AGENDA CALENDAR ── */
+/* AGENDA CALENDAR */
 .agenda-nav{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
 .agenda-nav-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.12s;}
 .agenda-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -297,9 +191,7 @@ html{overflow-x:hidden;width:100%;}
 .agenda-view-toggle{display:flex;gap:4px;margin-left:auto;}
 .agenda-view-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 11px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;}
 .agenda-view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-
-.agenda-grid{display:grid;gap:8px;}
-.agenda-day{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.agenda-day{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;}
 .agenda-day.today{border-color:var(--accent);}
 .agenda-day-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface2);}
 .agenda-day.today .agenda-day-header{background:rgba(74,63,212,0.15);}
@@ -308,7 +200,6 @@ html{overflow-x:hidden;width:100%;}
 .agenda-day-name{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;}
 .agenda-day-badges{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;}
 .agenda-empty{padding:10px 16px;font-size:11px;color:var(--muted);}
-
 .agenda-event{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);}
 .agenda-event:last-child{border-bottom:none;}
 .agenda-event-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:20px;margin-top:2px;}
@@ -320,14 +211,7 @@ html{overflow-x:hidden;width:100%;}
 .type-gcal{background:rgba(74,63,212,0.15);color:#A5A0F5;}
 .type-hito{background:rgba(107,114,128,0.15);color:#9CA3AF;}
 
-.gcal-section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);padding:8px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
-
-.btn{padding:8px 15px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s;}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
-.btn-ghost:hover{border-color:var(--pulse);}
-
-/* ── CAL BARS (for detail sidebar) ── */
+/* CAL BARS */
 .cal-item{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);}
 .cal-item:last-child{border-bottom:none;}
 .cal-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:24px;}
@@ -338,22 +222,45 @@ html{overflow-x:hidden;width:100%;}
 .cal-title{font-size:12px;font-weight:500;}
 .cal-meta{font-size:11px;color:var(--muted);margin-top:2px;}
 
-/* ── RESPONSIVE ── */
+/* COMMENTS INLINE */
+.comment-inline-list{display:flex;flex-direction:column;gap:8px;}
+.comment-inline-item{background:var(--surface2);border-radius:8px;padding:11px 14px;}
+.comment-inline-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;flex-wrap:wrap;gap:6px;}
+.comment-inline-author{font-size:12px;font-weight:600;color:var(--pulse);}
+.comment-inline-meta{display:flex;gap:8px;align-items:center;}
+.comment-inline-date{font-size:10px;color:var(--muted);}
+.comment-inline-text{font-size:12px;color:var(--text);line-height:1.5;}
+.comment-inline-empty{text-align:center;padding:20px 0;color:var(--muted);font-size:12px;}
+.comment-status-open{background:rgba(245,158,11,0.15);color:#FCD34D;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500;}
+.comment-status-closed{background:rgba(34,197,94,0.12);color:#86EFAC;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500;}
+
+/* COMMENT FORM INLINE */
+.comment-form-inline{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.comment-form-inline input,.comment-form-inline textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 12px;font-size:12px;font-family:'Inter',sans-serif;outline:none;width:100%;}
+.comment-form-inline input:focus,.comment-form-inline textarea:focus{border-color:var(--accent);}
+.comment-form-inline textarea{resize:none;height:70px;line-height:1.5;}
+.comment-form-row{display:flex;gap:8px;}
+.comment-submit-btn{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:9px 18px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;}
+.comment-submit-btn:hover{background:var(--pulse);}
+.comment-submit-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+.btn{padding:8px 15px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--pulse);}
+
+/* RESPONSIVE */
 @media(max-width:900px){
   .topbar{display:flex;}
   .shell{flex-direction:column;height:100vh;}
-  .sidebar{
-    position:fixed;top:0;left:0;height:100vh;
-    transform:translateX(-100%);
-  }
+  .sidebar{position:fixed;top:0;left:0;height:100vh;transform:translateX(-100%);}
   .sidebar.open{transform:translateX(0);}
   .sidebar-overlay.open{display:block;}
   .main{padding:16px;overflow-y:auto;flex:1;}
   .venue-grid{grid-template-columns:1fr;}
   .kpi-3{grid-template-columns:1fr 1fr;}
   .kpi-4{grid-template-columns:1fr 1fr;}
-  .two-col{grid-template-columns:1fr;}
-  .three-col{grid-template-columns:1fr;}
+  .two-col,.three-col{grid-template-columns:1fr;}
   .pie-grid{grid-template-columns:1fr;}
   .detail-grid{grid-template-columns:1fr;}
   .page-header{flex-direction:column;gap:10px;}
@@ -365,35 +272,6 @@ html{overflow-x:hidden;width:100%;}
   .main{padding:12px;}
   .login-box{padding:28px 20px;}
 }
-
-/* ── COMMENTS ── */
-.comment-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
-.comment-btn:hover{border-color:var(--pulse);color:var(--text);}
-.comment-btn .cb-count{background:var(--accent);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:600;}
-.comment-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;}
-.comment-overlay.open{display:flex;align-items:flex-end;justify-content:flex-end;}
-.comment-panel{background:var(--surface);width:100%;max-width:420px;height:100vh;display:flex;flex-direction:column;border-left:1px solid var(--border);animation:slideIn 0.25s ease;}
-@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-.comment-panel-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-.comment-panel-title{font-size:14px;font-weight:600;}
-.comment-panel-ref{font-size:11px;color:var(--muted);margin-top:2px;}
-.comment-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;}
-.comment-list{flex:1;overflow-y:auto;padding:16px;}
-.comment-item{background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:10px;}
-.comment-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.comment-author{font-size:12px;font-weight:600;color:var(--pulse);}
-.comment-date{font-size:10px;color:var(--muted);}
-.comment-text{font-size:12px;color:var(--text);line-height:1.5;}
-.comment-empty{text-align:center;padding:40px 0;color:var(--muted);font-size:12px;}
-.comment-form{padding:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
-.comment-form input,.comment-form textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 12px;font-size:12px;font-family:'Inter',sans-serif;outline:none;width:100%;}
-.comment-form input:focus,.comment-form textarea:focus{border-color:var(--accent);}
-.comment-form textarea{resize:none;height:80px;line-height:1.5;}
-.comment-submit{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s;}
-.comment-submit:hover{background:var(--pulse);}
-.comment-submit:disabled{opacity:0.5;cursor:not-allowed;}
-.comment-sending{font-size:11px;color:var(--muted);text-align:center;}
-@media(max-width:900px){.comment-panel{max-width:100%;}}
 </style>
 </head>
 <body>
@@ -402,7 +280,7 @@ html{overflow-x:hidden;width:100%;}
 <div id="login-overlay">
   <div class="login-box">
     <div class="login-logo">dale<span>.</span>venues</div>
-    <div class="login-sub">Acceso interno — Dale Play</div>
+    <div class="login-sub">Acceso interno &mdash; Dale Play</div>
     <input type="password" id="pw-input" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
     <button onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="login-error">Contrasena incorrecta</div>
@@ -414,16 +292,14 @@ html{overflow-x:hidden;width:100%;}
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="shell">
 
-  <!-- MOBILE TOPBAR -->
   <div class="topbar">
     <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
     <div class="topbar-logo">dale<span>.</span>venues</div>
     <div id="topbar-sync" style="font-size:10px;color:var(--muted)"></div>
   </div>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">dale<span>.</span>venues<span class="tagline">Dale Play · Venue Ops</span></div>
+    <div class="sidebar-logo">dale<span>.</span>venues<span class="tagline">Dale Play &middot; Venue Ops</span></div>
     <div class="sidebar-section">General</div>
     <button class="nav-item active" onclick="nav('overview')"><span class="icon">&#11041;</span>Overview</button>
     <button class="nav-item" onclick="nav('comercial')"><span class="icon">&#11050;</span>Comercial</button>
@@ -438,7 +314,6 @@ html{overflow-x:hidden;width:100%;}
     </div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
 
     <!-- OVERVIEW -->
@@ -453,12 +328,34 @@ html{overflow-x:hidden;width:100%;}
         <div class="kpi-row kpi-3" id="overview-kpis"></div>
         <div class="venue-grid" id="venue-cards"></div>
         <div class="card" style="margin-bottom:16px">
-          <div class="card-header">Status Comercial<button class="card-action" onclick="nav('comercial')">Ver Pipeline completo &rarr;</button></div>
+          <div class="card-header">Status Comercial <button class="card-action" onclick="nav('comercial')">Ver Pipeline completo &rarr;</button></div>
           <div style="padding:16px"><div class="pie-grid" id="pie-grid"></div></div>
         </div>
-        <div class="card">
-          <div class="card-header">Hitos Criticos<div style="display:flex;gap:8px;align-items:center"><button class="comment-btn" onclick="openComments('Hitos','General')">&#128172; <span id="cb-hitos-general">Comentarios</span></button><button class="card-action" onclick="nav('calendario')">Ver Calendario &rarr;</button></div></div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">Hitos Criticos <button class="card-action" onclick="nav('calendario')">Ver Calendario &rarr;</button></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hito</th><th>Venue</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="tbl-hitos-criticos"></tbody></table></div>
+        </div>
+        <!-- COMENTARIOS OVERVIEW -->
+        <div class="card">
+          <div class="card-header">Comentarios del Proyecto <span class="card-sub" id="comments-overview-count"></span></div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Fecha</th><th>Autor</th><th>Tema</th><th>Comentario</th><th>Estado</th></tr></thead>
+              <tbody id="tbl-comments-overview"></tbody>
+            </table>
+          </div>
+          <div style="padding:16px;border-top:1px solid var(--border)">
+            <div id="comment-form-overview" class="comment-form-inline">
+              <div class="comment-form-row">
+                <input type="text" id="cov-autor" placeholder="Tu nombre">
+                <input type="text" id="cov-tema" placeholder="Tema (ej: PMH Naming)">
+              </div>
+              <textarea id="cov-texto" placeholder="Escribi tu comentario..."></textarea>
+              <div style="display:flex;justify-content:flex-end">
+                <button class="comment-submit-btn" onclick="submitCommentGeneral()">Enviar comentario</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -466,7 +363,8 @@ html{overflow-x:hidden;width:100%;}
     <!-- COMERCIAL -->
     <div class="view" id="view-comercial">
       <div class="page-header">
-        <div><div class="page-title">Comercial & Deals</div><div class="page-sub">Naming rights, patrocinios, F&amp;B, promotores y concesiones</div></div>
+        <div><div class="page-title">Comercial &amp; Deals</div><div class="page-sub">Naming rights, patrocinios, F&amp;B, promotores y concesiones</div></div>
+        <button class="back-btn" onclick="nav('overview')">&larr; Volver al Overview</button>
       </div>
       <div class="error-banner" id="err-comercial"></div>
       <div id="comercial-loading" class="loading"><div class="spinner"></div>Cargando...</div>
@@ -479,7 +377,7 @@ html{overflow-x:hidden;width:100%;}
           <button class="filter-btn" onclick="filterDeals('ROS',this)">Rosario</button>
         </div>
         <div class="card">
-          <div class="card-header"><span>Pipeline de Acuerdos <span class="card-sub" id="pipeline-count"></span></span><button class="comment-btn" onclick="openComments('Comercial','Pipeline')">&#128172; Comentarios</button></div>
+          <div class="card-header">Pipeline de Acuerdos <span class="card-sub" id="pipeline-count"></span></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Empresa</th><th>Venue</th><th>Categoria</th><th>Valor</th><th>Duracion</th><th>Prob.</th><th>Estado</th><th>Prox. accion</th></tr></thead><tbody id="tbl-deals-full"></tbody></table></div>
         </div>
       </div>
@@ -488,7 +386,7 @@ html{overflow-x:hidden;width:100%;}
     <!-- TAREAS -->
     <div class="view" id="view-tareas">
       <div class="page-header">
-        <div><div class="page-title">Tareas & Responsables</div><div class="page-sub">Acciones pendientes por venue y responsable</div></div>
+        <div><div class="page-title">Tareas &amp; Responsables</div><div class="page-sub">Acciones pendientes por venue y responsable</div></div>
       </div>
       <div class="error-banner" id="err-tareas"></div>
       <div id="tareas-loading" class="loading"><div class="spinner"></div>Cargando...</div>
@@ -501,8 +399,27 @@ html{overflow-x:hidden;width:100%;}
           <button class="filter-btn" onclick="filterTareas('urgente',this)">Urgentes</button>
         </div>
         <div class="card">
-          <div class="card-header"><span>Tareas Activas <span class="card-sub" id="tareas-count"></span></span><button class="comment-btn" onclick="openComments('Tareas','General')">&#128172; Comentarios</button></div>
+          <div class="card-header">Tareas Activas <span class="card-sub" id="tareas-count"></span></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tarea</th><th>Venue</th><th>Responsable</th><th>Categoria</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody id="tbl-tareas"></tbody></table></div>
+        </div>
+        <!-- COMENTARIOS TAREAS -->
+        <div class="card">
+          <div class="card-header">Comentarios sobre Tareas <span class="card-sub" id="comments-tareas-count"></span></div>
+          <div id="comments-tareas-list" style="padding:12px 16px">
+            <div class="comment-inline-empty">Cargando comentarios...</div>
+          </div>
+          <div style="padding:16px;border-top:1px solid var(--border)">
+            <div class="comment-form-inline">
+              <div class="comment-form-row">
+                <input type="text" id="ct-autor" placeholder="Tu nombre">
+                <input type="text" id="ct-tema" placeholder="Tema (ej: Tarea licencias)">
+              </div>
+              <textarea id="ct-texto" placeholder="Escribi tu comentario..."></textarea>
+              <div style="display:flex;justify-content:flex-end">
+                <button class="comment-submit-btn" onclick="submitCommentTareas()">Enviar comentario</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -515,7 +432,6 @@ html{overflow-x:hidden;width:100%;}
       <div class="error-banner" id="err-calendario"></div>
       <div id="calendario-loading" class="loading"><div class="spinner"></div>Cargando...</div>
       <div id="calendario-content" style="display:none">
-        <!-- AGENDA NAV -->
         <div class="agenda-nav">
           <button class="agenda-nav-btn" onclick="agendaMove(-1)">&larr;</button>
           <div class="agenda-period" id="agenda-period"></div>
@@ -537,52 +453,31 @@ html{overflow-x:hidden;width:100%;}
       <div id="venue-detail-content"></div>
     </div>
 
-  
-<!-- COMMENTS PANEL -->
-<div class="comment-overlay" id="comment-overlay" onclick="closeComments(event)">
-  <div class="comment-panel">
-    <div class="comment-panel-header">
-      <div>
-        <div class="comment-panel-title" id="comment-panel-title">Comentarios</div>
-        <div class="comment-panel-ref" id="comment-panel-ref"></div>
-      </div>
-      <button class="comment-close" onclick="closeCommentPanel()">&#x2715;</button>
-    </div>
-    <div class="comment-list" id="comment-list">
-      <div class="comment-empty">Cargando comentarios...</div>
-    </div>
-    <div class="comment-form">
-      <input type="text" id="comment-autor" placeholder="Tu nombre">
-      <textarea id="comment-texto" placeholder="Escribi tu comentario..."></textarea>
-      <button class="comment-submit" id="comment-submit-btn" onclick="submitComment()">Enviar comentario</button>
-      <div class="comment-sending" id="comment-sending" style="display:none">Enviando...</div>
-    </div>
-  </div>
-</div>
-</main>
+  </main>
 </div>
 </div>
 
 <script>
-// ═══════════════════════════════════
-// CONFIG — editá estas líneas
-// ═══════════════════════════════════
+// ═══════════════════════════
+// CONFIG
+// ═══════════════════════════
 const SHEET_ID       = '12JdkxYH-TObsyNsrgvPq5Jz9EQvkJQqpPmNk3TrGNSU';
 const PASSWORD       = 'dp26';
 const CALENDAR_PROXY = 'https://script.google.com/macros/s/AKfycbzt9q8O8k1YYpLskqigPa7jO25L08kYzMfcGreHBNu1gq-9a0pg-ow7Y4l98QqjmtY/exec';
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // STATE
-// ═══════════════════════════════════
+// ═══════════════════════════
 let DATA = {venues:[],deals:[],tareas:[],hitos:[]};
+let COMMENTS = [];
 let GCAL_EVENTS = [];
 let pieCharts = {};
-let agendaView = 'week';   // 'week' | 'month'
-let agendaAnchor = new Date();  // Monday of current week / 1st of current month
+let agendaView = 'week';
+let agendaAnchor = new Date();
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // LOGIN
-// ═══════════════════════════════════
+// ═══════════════════════════
 function doLogin(){
   const v=document.getElementById('pw-input').value;
   if(v===PASSWORD){
@@ -596,9 +491,9 @@ function doLogin(){
   }
 }
 
-// ═══════════════════════════════════
-// SIDEBAR MOBILE
-// ═══════════════════════════════════
+// ═══════════════════════════
+// SIDEBAR
+// ═══════════════════════════
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-overlay').classList.toggle('open');
@@ -608,9 +503,9 @@ function closeSidebar(){
   document.getElementById('sidebar-overlay').classList.remove('open');
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // NAV
-// ═══════════════════════════════════
+// ═══════════════════════════
 function nav(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -629,9 +524,9 @@ function showVenueDetail(code){
   closeSidebar();
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // FETCH SHEETS
-// ═══════════════════════════════════
+// ═══════════════════════════
 async function fetchSheet(tab){
   const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
   const res=await fetch(url);
@@ -657,10 +552,9 @@ async function loadAllData(){
   }catch(e){
     console.error(e);
     setSyncStatus('error');
-    showErr('No se pudo conectar con Google Sheets. Verifica el Sheet ID y que sea publico.');
+    showErr('No se pudo conectar con Google Sheets.');
     loadDemoData();
   }
-  // Load GCal and comments in background
   loadCalendarEvents();
   loadComments();
 }
@@ -683,9 +577,9 @@ function showErr(msg){
   });
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // DEMO DATA
-// ═══════════════════════════════════
+// ═══════════════════════════
 function loadDemoData(){
   DATA.venues=[
     {Codigo:'PMH',Nombre:'Palermo Music Hall',Ciudad:'Buenos Aires',Capacidad:15000,Apertura:'Q1 2027',Inversion:'18M USD',Avance:68,NamingEstado:'Cerrado',NamingEmpresa:'Banco Galicia',ProximoHito:'Licencias municipales',FechaHito:'30 Jun',StatusObra:'En obra'},
@@ -719,9 +613,9 @@ function loadDemoData(){
   renderAll();
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // HELPERS
-// ═══════════════════════════════════
+// ═══════════════════════════
 function venueChip(code){
   const m={PMH:'chip-pmh',CBA:'chip-cor',ROS:'chip-ros'};
   return `<span class="chip ${m[code]||'chip-all'}">${code||'-'}</span>`;
@@ -750,47 +644,43 @@ function venueTagClass(c){return {PMH:'tag-pmh',CBA:'tag-cor',ROS:'tag-ros'}[c]|
 function isClosed(e){const s=(e||'').toLowerCase();return s==='cerrado'||s==='avanzado'||s==='cerrando';}
 function countBy(arr,field){return arr.reduce((a,i)=>{const k=i[field]||'Sin categoria';a[k]=(a[k]||0)+1;return a;},{});}
 
-function startOfWeek(d){
-  const c=new Date(d);
-  const day=c.getDay();
-  const diff=day===0?-6:1-day; // Monday
-  c.setDate(c.getDate()+diff);
-  c.setHours(0,0,0,0);
-  return c;
-}
+function startOfWeek(d){const c=new Date(d);const day=c.getDay();const diff=day===0?-6:1-day;c.setDate(c.getDate()+diff);c.setHours(0,0,0,0);return c;}
 function addDays(d,n){const c=new Date(d);c.setDate(c.getDate()+n);return c;}
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
 function isToday(d){return sameDay(d,new Date());}
 
-// Accepts: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, or native Date
 function parseDate(val){
   if(!val) return null;
   if(val instanceof Date) return isNaN(val)?null:val;
   const s=String(val).trim();
-  // YYYY-MM-DD
-  if(/^\d{4}-\d{2}-\d{2}/.test(s)){
-    const d=new Date(s);
-    return isNaN(d)?null:d;
-  }
-  // DD/MM/YYYY or DD-MM-YYYY
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)){const d=new Date(s);return isNaN(d)?null:d;}
   const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-  if(m){
-    const d=new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]));
-    return isNaN(d)?null:d;
-  }
-  // Google Sheets gviz format: Date(yyyy,m,d)
+  if(m){const d=new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]));return isNaN(d)?null:d;}
   const gm=s.match(/Date\((\d+),(\d+),(\d+)\)/);
-  if(gm){
-    const d=new Date(parseInt(gm[1]),parseInt(gm[2]),parseInt(gm[3]));
-    return isNaN(d)?null:d;
-  }
-  const d=new Date(s);
-  return isNaN(d)?null:d;
+  if(gm){const d=new Date(parseInt(gm[1]),parseInt(gm[2]),parseInt(gm[3]));return isNaN(d)?null:d;}
+  const d=new Date(s);return isNaN(d)?null:d;
 }
 
-// ═══════════════════════════════════
+// Sumar valores tipo $2.8M, $800K, $1.2M
+function sumValores(deals){
+  return deals.reduce((sum,d)=>{
+    const v=String(d.Valor||'').replace(/\s/g,'').toUpperCase();
+    const num=parseFloat(v.replace(/[$]/g,''));
+    if(isNaN(num)) return sum;
+    if(v.includes('M')) return sum+num*1000000;
+    if(v.includes('K')) return sum+num*1000;
+    return sum+num;
+  },0);
+}
+function formatMonto(n){
+  if(n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
+  if(n>=1000) return '$'+(n/1000).toFixed(0)+'K';
+  return '$'+n.toFixed(0);
+}
+
+// ═══════════════════════════
 // RENDER ALL
-// ═══════════════════════════════════
+// ═══════════════════════════
 function renderAll(){
   renderOverview();
   renderComercial();
@@ -803,9 +693,9 @@ function renderAll(){
   });
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // OVERVIEW
-// ═══════════════════════════════════
+// ═══════════════════════════
 function renderOverview(){
   const total=DATA.deals.length;
   const cerrados=DATA.deals.filter(d=>isClosed(d.Estado)).length;
@@ -822,7 +712,9 @@ function renderOverview(){
   document.getElementById('venue-cards').innerHTML=DATA.venues.map(v=>{
     const sm={'On track':'sdot-g','En obra':'sdot-y','Demora':'sdot-r'};
     const av=+v.Avance||0;
-    const dc=DATA.deals.filter(d=>d.Venue===v.Codigo&&isClosed(d.Estado)).length;
+    const vDeals=DATA.deals.filter(d=>d.Venue===v.Codigo);
+    const prospects=vDeals.length;
+    const factEst=sumValores(vDeals);
     return `
     <div class="venue-card" onclick="showVenueDetail('${v.Codigo}')">
       <div class="vc-header">
@@ -835,12 +727,12 @@ function renderOverview(){
         <div class="vc-metrics">
           <div class="vm"><div class="vm-label">Naming</div><div class="vm-value" style="color:${v.NamingEstado==='Cerrado'?'var(--green)':v.NamingEstado==='Negociando'?'var(--yellow)':'var(--muted)'}">${v.NamingEstado||'-'}</div></div>
           <div class="vm"><div class="vm-label">Apertura Est.</div><div class="vm-value">${v.Apertura||'-'}</div></div>
-          <div class="vm"><div class="vm-label">Inversion</div><div class="vm-value">${v.Inversion||'-'}</div></div>
-          <div class="vm"><div class="vm-label">Deals cerrados</div><div class="vm-value" style="color:var(--green)">${dc}</div></div>
+          <div class="vm"><div class="vm-label">Prospects</div><div class="vm-value" style="color:var(--pulse)">${prospects}</div></div>
+          <div class="vm"><div class="vm-label">Facturacion Est.</div><div class="vm-value" style="color:var(--green)">${factEst>0?formatMonto(factEst):'-'}</div></div>
         </div>
       </div>
       <div class="vc-footer">
-        <div><span class="ms-label">Prox. hito: </span><span style="font-size:11px">${v.ProximoHito||'-'} - ${v.FechaHito||'-'}</span></div>
+        <div><span class="ms-label">Prox. hito: </span><span style="font-size:11px">${v.ProximoHito||'-'}</span></div>
         <span class="view-link">Ver detalle &rarr;</span>
       </div>
     </div>`;
@@ -850,13 +742,19 @@ function renderOverview(){
 
   const criticos=DATA.hitos.filter(h=>{const e=(h.Estado||'').toLowerCase();return e==='urgente'||e==='en riesgo';}).sort((a,b)=>(parseDate(a.Fecha)||0)-(parseDate(b.Fecha)||0));
   document.getElementById('tbl-hitos-criticos').innerHTML=criticos.length
-    ?criticos.map(h=>{const _d=parseDate(h.Fecha);const d=_d?_d.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'–';return `<tr><td>${h.Hito}</td><td>${venueChip(h.Venue)}</td><td>${d}</td><td>${hitoBadge(h.Estado)}</td></tr>`;}).join('')
+    ?criticos.map(h=>{
+        const _d=parseDate(h.Fecha);
+        const d=_d?_d.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'–';
+        return `<tr><td>${h.Hito}</td><td>${venueChip(h.Venue)}</td><td>${d}</td><td>${hitoBadge(h.Estado)}</td></tr>`;
+      }).join('')
     :`<tr><td class="tbl-empty" colspan="4">Sin hitos urgentes o en riesgo</td></tr>`;
+
+  renderCommentsOverview();
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // PIE CHARTS
-// ═══════════════════════════════════
+// ═══════════════════════════
 const PIE_COLORS=['#4A3FD4','#7B72E8','#22C55E','#F59E0B','#EF4444','#059669','#D97706','#A78BFA','#34D399','#FCD34D'];
 
 function renderPieCharts(){
@@ -867,12 +765,16 @@ function renderPieCharts(){
     const vd=DATA.deals.filter(d=>d.Venue===v.Codigo);
     const byCat=countBy(vd,'Categoria');
     const byStatus=countBy(vd,'Estado');
-    const sb=Object.entries(byStatus).map(([k,n])=>`<div class="status-box"><div class="status-box-label">${k}</div><div class="status-box-val">${n}</div></div>`).join('');
+    const factTotal=sumValores(vd);
+    // Status boxes — replace "Primer Contacto" with "Facturacion Estimada"
+    const statusEntries=Object.entries(byStatus);
+    const sb=statusEntries.map(([k,n])=>`<div class="status-box"><div class="status-box-label">${k}</div><div class="status-box-val">${n}</div></div>`).join('');
+    const factBox=`<div class="status-box" style="grid-column:1/-1"><div class="status-box-label">Facturacion Estimada</div><div class="status-box-val" style="color:var(--green);font-size:13px">${factTotal>0?formatMonto(factTotal):'-'}</div></div>`;
     return `
     <div class="pie-card">
       <div class="pie-title"><span class="venue-tag ${venueTagClass(v.Codigo)}">${v.Codigo}</span>${v.Nombre||v.Codigo}</div>
       <div class="pie-sub">${vd.length} acuerdo${vd.length!==1?'s':''}</div>
-      ${vd.length>0?`<div class="pie-wrap"><canvas id="pie-${v.Codigo}"></canvas></div><div class="pie-legend" id="legend-${v.Codigo}"></div><div class="status-grid">${sb}</div>`
+      ${vd.length>0?`<div class="pie-wrap"><canvas id="pie-${v.Codigo}"></canvas></div><div class="pie-legend" id="legend-${v.Codigo}"></div><div class="status-grid">${sb}${factBox}</div>`
       :`<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px 0">Sin deals cargados</div>`}
     </div>`;
   }).join('');
@@ -895,9 +797,9 @@ function renderPieCharts(){
   });
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // COMERCIAL
-// ═══════════════════════════════════
+// ═══════════════════════════
 let currentDealFilter='todos';
 function renderComercial(){
   const total=DATA.deals.length;
@@ -928,9 +830,9 @@ function filterDeals(f,btn){
   renderDealsTable(f);
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // TAREAS
-// ═══════════════════════════════════
+// ═══════════════════════════
 let currentTareaFilter='todas';
 function renderTareas(filter){
   if(filter!==undefined) currentTareaFilter=filter;
@@ -942,6 +844,7 @@ function renderTareas(filter){
   document.getElementById('tbl-tareas').innerHTML=tareas.length
     ?tareas.map(t=>`<tr><td>${t.Tarea||'-'}</td><td>${venueChip(t.Venue)}</td><td>${t.Responsable||'-'}</td><td style="color:var(--secondary)">${t.Categoria||'-'}</td><td>${duracionDue(t.Vencimiento)}</td><td>${hitoBadge(t.Estado)}</td></tr>`).join('')
     :`<tr><td class="tbl-empty" colspan="6">Sin tareas para este filtro</td></tr>`;
+  renderCommentsTareas();
 }
 function filterTareas(f,btn){
   document.querySelectorAll('#view-tareas .filter-btn').forEach(b=>b.classList.remove('active'));
@@ -949,9 +852,146 @@ function filterTareas(f,btn){
   renderTareas(f);
 }
 
-// ═══════════════════════════════════
-// GOOGLE CALENDAR FETCH
-// ═══════════════════════════════════
+// ═══════════════════════════
+// COMMENTS
+// ═══════════════════════════
+async function loadComments(){
+  try{
+    const rows=await fetchSheet('Comentarios');
+    COMMENTS=rows.filter(r=>r.Comentario);
+  }catch(e){
+    COMMENTS=[];
+  }
+  renderCommentsOverview();
+  renderCommentsTareas();
+}
+
+function commentStatusBadge(s){
+  const lower=(s||'abierto').toLowerCase();
+  if(lower==='cerrado'||lower==='resuelto') return `<span class="comment-status-closed">${s||'Cerrado'}</span>`;
+  return `<span class="comment-status-open">${s||'Abierto'}</span>`;
+}
+
+function renderCommentsOverview(){
+  const el=document.getElementById('tbl-comments-overview');
+  const countEl=document.getElementById('comments-overview-count');
+  if(!el) return;
+  if(countEl) countEl.textContent=COMMENTS.length+' comentarios';
+  el.innerHTML=COMMENTS.length
+    ?[...COMMENTS].reverse().map(c=>`
+      <tr>
+        <td style="white-space:nowrap;color:var(--muted)">${c.Fecha||'-'}</td>
+        <td style="color:var(--pulse);font-weight:600">${c.Autor||'-'}</td>
+        <td>${c.Referencia||c.Seccion||'-'}</td>
+        <td>${c.Comentario||'-'}</td>
+        <td>${commentStatusBadge(c.Estado)}</td>
+      </tr>`).join('')
+    :`<tr><td class="tbl-empty" colspan="5">Sin comentarios todavia</td></tr>`;
+}
+
+function renderCommentsTareas(){
+  const el=document.getElementById('comments-tareas-list');
+  const countEl=document.getElementById('comments-tareas-count');
+  if(!el) return;
+  const filtered=COMMENTS.filter(c=>(c.Seccion||'')==='Tareas');
+  if(countEl) countEl.textContent=filtered.length+' comentarios';
+  el.innerHTML=filtered.length
+    ?`<div class="comment-inline-list">`+[...filtered].reverse().map(c=>`
+      <div class="comment-inline-item">
+        <div class="comment-inline-header">
+          <span class="comment-inline-author">${c.Autor||'Anonimo'}</span>
+          <div class="comment-inline-meta">
+            ${commentStatusBadge(c.Estado)}
+            <span class="comment-inline-date">${c.Fecha||''}</span>
+          </div>
+        </div>
+        ${c.Referencia?`<div style="font-size:10px;color:var(--muted);margin-bottom:4px">${c.Referencia}</div>`:''}
+        <div class="comment-inline-text">${c.Comentario}</div>
+      </div>`).join('')+`</div>`
+    :`<div class="comment-inline-empty">Sin comentarios sobre tareas todavia</div>`;
+}
+
+function renderCommentsVenue(code){
+  const el=document.getElementById(`comments-venue-${code}`);
+  if(!el) return;
+  const filtered=COMMENTS.filter(c=>c.Seccion===code||(c.Referencia||'').includes(code));
+  el.innerHTML=filtered.length
+    ?`<div class="comment-inline-list">`+[...filtered].reverse().map(c=>`
+      <div class="comment-inline-item">
+        <div class="comment-inline-header">
+          <span class="comment-inline-author">${c.Autor||'Anonimo'}</span>
+          <div class="comment-inline-meta">
+            ${commentStatusBadge(c.Estado)}
+            <span class="comment-inline-date">${c.Fecha||''}</span>
+          </div>
+        </div>
+        ${c.Referencia?`<div style="font-size:10px;color:var(--muted);margin-bottom:4px">${c.Referencia}</div>`:''}
+        <div class="comment-inline-text">${c.Comentario}</div>
+      </div>`).join('')+`</div>`
+    :`<div class="comment-inline-empty">Sin comentarios para este venue todavia</div>`;
+}
+
+async function postComment(autor, tema, texto, seccion, referencia){
+  COMMENTS.push({
+    Fecha:new Date().toLocaleString('es-AR'),
+    Autor:autor||'Anonimo',
+    Seccion:seccion,
+    Referencia:referencia||tema||'-',
+    Comentario:texto,
+    Estado:'Abierto'
+  });
+  try{
+    await fetch(CALENDAR_PROXY,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({autor:autor||'Anonimo',seccion,referencia:referencia||tema||'-',comentario:texto}),
+      mode:'no-cors'
+    });
+  }catch(e){console.error('Comment post error:',e);}
+}
+
+async function submitCommentGeneral(){
+  const autor=document.getElementById('cov-autor').value.trim();
+  const tema=document.getElementById('cov-tema').value.trim();
+  const texto=document.getElementById('cov-texto').value.trim();
+  if(!texto) return;
+  const btn=document.querySelector('#comment-form-overview .comment-submit-btn');
+  btn.disabled=true;btn.textContent='Enviando...';
+  await postComment(autor,tema,texto,'General',tema);
+  document.getElementById('cov-texto').value='';
+  renderCommentsOverview();
+  btn.disabled=false;btn.textContent='Enviar comentario';
+}
+
+async function submitCommentTareas(){
+  const autor=document.getElementById('ct-autor').value.trim();
+  const tema=document.getElementById('ct-tema').value.trim();
+  const texto=document.getElementById('ct-texto').value.trim();
+  if(!texto) return;
+  const btn=document.querySelector('#view-tareas .comment-submit-btn');
+  btn.disabled=true;btn.textContent='Enviando...';
+  await postComment(autor,tema,texto,'Tareas',tema);
+  document.getElementById('ct-texto').value='';
+  renderCommentsTareas();
+  btn.disabled=false;btn.textContent='Enviar comentario';
+}
+
+async function submitCommentVenue(code){
+  const autor=document.getElementById(`cv-autor-${code}`).value.trim();
+  const tema=document.getElementById(`cv-tema-${code}`).value.trim();
+  const texto=document.getElementById(`cv-texto-${code}`).value.trim();
+  if(!texto) return;
+  const btn=document.getElementById(`cv-btn-${code}`);
+  btn.disabled=true;btn.textContent='Enviando...';
+  await postComment(autor,tema,texto,code,tema||code);
+  document.getElementById(`cv-texto-${code}`).value='';
+  renderCommentsVenue(code);
+  btn.disabled=false;btn.textContent='Enviar comentario';
+}
+
+// ═══════════════════════════
+// GOOGLE CALENDAR
+// ═══════════════════════════
 async function loadCalendarEvents(){
   const statusEl=document.getElementById('gcal-status');
   if(statusEl) statusEl.textContent='Cargando Google Calendar...';
@@ -961,7 +1001,6 @@ async function loadCalendarEvents(){
     if(data.status!=='ok') throw new Error(data.message||'Error del proxy');
     GCAL_EVENTS=data.events||[];
     if(statusEl) statusEl.textContent=GCAL_EVENTS.length+' reunion'+(GCAL_EVENTS.length!==1?'es':'')+' VENUES';
-    // Re-render agenda if it's visible
     if(document.getElementById('view-calendario').classList.contains('active')) renderAgenda();
   }catch(err){
     console.error('GCal error:',err);
@@ -969,18 +1008,12 @@ async function loadCalendarEvents(){
   }
 }
 
-// ═══════════════════════════════════
-// AGENDA CALENDAR
-// ═══════════════════════════════════
+// ═══════════════════════════
+// AGENDA
+// ═══════════════════════════
 function agendaMove(dir){
-  if(agendaView==='week'){
-    agendaAnchor=addDays(agendaAnchor,dir*7);
-  } else {
-    const d=new Date(agendaAnchor);
-    d.setMonth(d.getMonth()+dir);
-    d.setDate(1);
-    agendaAnchor=d;
-  }
+  if(agendaView==='week'){agendaAnchor=addDays(agendaAnchor,dir*7);}
+  else{const d=new Date(agendaAnchor);d.setMonth(d.getMonth()+dir);d.setDate(1);agendaAnchor=d;}
   renderAgenda();
 }
 function agendaToday(){
@@ -991,128 +1024,72 @@ function setAgendaView(v,btn){
   agendaView=v;
   document.querySelectorAll('.agenda-view-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  if(v==='month'){
-    const n=new Date();
-    agendaAnchor=new Date(n.getFullYear(),n.getMonth(),1);
-  } else {
-    agendaAnchor=startOfWeek(new Date());
-  }
+  if(v==='month'){const n=new Date();agendaAnchor=new Date(n.getFullYear(),n.getMonth(),1);}
+  else{agendaAnchor=startOfWeek(new Date());}
   renderAgenda();
 }
 
 function renderAgenda(){
-  // Build list of days to show
   let days=[];
   if(agendaView==='week'){
     const mon=startOfWeek(agendaAnchor);
     for(let i=0;i<7;i++) days.push(addDays(mon,i));
-    const end=days[6];
     const s=days[0].toLocaleDateString('es-AR',{day:'numeric',month:'long'});
-    const e=end.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
-    document.getElementById('agenda-period').textContent=s+' – '+e;
+    const e=days[6].toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('agenda-period').textContent=s+' - '+e;
   } else {
     const year=agendaAnchor.getFullYear(),month=agendaAnchor.getMonth();
     const total=new Date(year,month+1,0).getDate();
     for(let i=1;i<=total;i++) days.push(new Date(year,month,i));
     document.getElementById('agenda-period').textContent=new Date(year,month,1).toLocaleDateString('es-AR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase());
   }
-
-  // Map hitos by date
   const hitosByDay={};
   DATA.hitos.forEach(h=>{
-    if(!h.Fecha) return;
-    const d=parseDate(h.Fecha);
-    if(!d) return;
-    const k=d.toDateString();
-    if(!hitosByDay[k]) hitosByDay[k]=[];
-    hitosByDay[k].push(h);
+    const d=parseDate(h.Fecha);if(!d) return;
+    const k=d.toDateString();if(!hitosByDay[k]) hitosByDay[k]=[];hitosByDay[k].push(h);
   });
-
-  // Map gcal events by date
   const gcalByDay={};
   GCAL_EVENTS.forEach(e=>{
-    const d=new Date(e.date);
-    const k=d.toDateString();
-    if(!gcalByDay[k]) gcalByDay[k]=[];
-    gcalByDay[k].push(e);
+    const d=new Date(e.date);const k=d.toDateString();
+    if(!gcalByDay[k]) gcalByDay[k]=[];gcalByDay[k].push(e);
   });
-
   const DAYS_ES=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
-  const barClass={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y',OK:'cal-bar-g',Pendiente:'cal-bar-b'};
-
   let html='';
   days.forEach(day=>{
     const dk=day.toDateString();
     const hitos=hitosByDay[dk]||[];
     const gcal=gcalByDay[dk]||[];
     const hasEvents=hitos.length||gcal.length;
-
-    // In week view show all days; in month view skip empty days
     if(agendaView==='month'&&!hasEvents) return;
-
     const todayCls=isToday(day)?' today':'';
     const dayName=DAYS_ES[day.getDay()];
     const dayNum=day.getDate();
     const monthStr=day.toLocaleDateString('es-AR',{month:'short'});
-
-    // Build badges for header
     let badges='';
     if(gcal.length) badges+=`<span class="badge badge-blue" style="font-size:9px">${gcal.length} reunion${gcal.length!==1?'es':''}</span>`;
     if(hitos.length) badges+=`<span class="badge badge-gray" style="font-size:9px">${hitos.length} hito${hitos.length!==1?'s':''}</span>`;
-
-    html+=`<div class="agenda-day${todayCls}">
-      <div class="agenda-day-header">
-        <div class="agenda-day-number">${dayNum}</div>
-        <div><div class="agenda-day-name">${dayName} ${agendaView==='month'?monthStr:''}</div></div>
-        <div class="agenda-day-badges">${badges}</div>
-      </div>`;
-
-    if(!hasEvents){
-      html+=`<div class="agenda-empty">Sin eventos</div>`;
-    } else {
-      // Google Calendar events first
-      if(gcal.length){
-        gcal.forEach(e=>{
-          const d=new Date(e.date);
-          const time=e.allDay?'Todo el dia':d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-          html+=`
-          <div class="agenda-event">
-            <div class="agenda-event-bar" style="background:var(--accent)"></div>
-            <div class="agenda-event-time">${time}</div>
-            <div class="agenda-event-body">
-              <div class="agenda-event-title">${e.title}</div>
-              ${e.location?`<div class="agenda-event-meta">${e.location}</div>`:''}
-              ${e.description?`<div class="agenda-event-meta">${e.description.substring(0,60)}${e.description.length>60?'...':''}</div>`:''}
-            </div>
-            <span class="agenda-event-type type-gcal">Reunion</span>
-          </div>`;
-        });
-      }
-      // Hitos
+    html+=`<div class="agenda-day${todayCls}"><div class="agenda-day-header"><div class="agenda-day-number">${dayNum}</div><div><div class="agenda-day-name">${dayName} ${agendaView==='month'?monthStr:''}</div></div><div class="agenda-day-badges">${badges}</div></div>`;
+    if(!hasEvents){html+=`<div class="agenda-empty">Sin eventos</div>`;}
+    else{
+      gcal.forEach(e=>{
+        const d=new Date(e.date);
+        const time=e.allDay?'Todo el dia':d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+        html+=`<div class="agenda-event"><div class="agenda-event-bar" style="background:var(--accent)"></div><div class="agenda-event-time">${time}</div><div class="agenda-event-body"><div class="agenda-event-title">${e.title}</div>${e.location?`<div class="agenda-event-meta">${e.location}</div>`:''}</div><span class="agenda-event-type type-gcal">Reunion</span></div>`;
+      });
       hitos.forEach(h=>{
         const bc={Urgente:'var(--red)','En riesgo':'var(--red)','En curso':'var(--yellow)',OK:'var(--green)',Pendiente:'var(--muted)'};
-        html+=`
-        <div class="agenda-event">
-          <div class="agenda-event-bar" style="background:${bc[h.Estado]||'var(--muted)'}"></div>
-          <div class="agenda-event-time">${venueChip(h.Venue)}</div>
-          <div class="agenda-event-body">
-            <div class="agenda-event-title">${h.Hito}</div>
-            <div class="agenda-event-meta">${h.Categoria||''}</div>
-          </div>
-          <span class="agenda-event-type type-hito">${hitoBadge(h.Estado)}</span>
-        </div>`;
+        html+=`<div class="agenda-event"><div class="agenda-event-bar" style="background:${bc[h.Estado]||'var(--muted)'}"></div><div class="agenda-event-time">${venueChip(h.Venue)}</div><div class="agenda-event-body"><div class="agenda-event-title">${h.Hito}</div><div class="agenda-event-meta">${h.Categoria||''}</div></div><span class="agenda-event-type type-hito">${hitoBadge(h.Estado)}</span></div>`;
       });
     }
     html+='</div>';
   });
-
   if(!html) html=`<div class="loading" style="padding:40px 0;color:var(--muted)">Sin eventos en este periodo</div>`;
   document.getElementById('agenda-body').innerHTML=html;
 }
 
-// ═══════════════════════════════════
+// ═══════════════════════════
 // VENUE DETAIL
-// ═══════════════════════════════════
+// ═══════════════════════════
 function renderVenueDetail(code){
   const v=DATA.venues.find(x=>x.Codigo===code)||{Codigo:code,Nombre:code};
   const deals=DATA.deals.filter(d=>d.Venue===code);
@@ -1120,7 +1097,6 @@ function renderVenueDetail(code){
   const hitos=DATA.hitos.filter(h=>h.Venue===code||h.Venue==='Todos');
   const av=+v.Avance||0;
   const dc=deals.filter(d=>isClosed(d.Estado)).length;
-
   const barClass={Urgente:'cal-bar-r','En riesgo':'cal-bar-r','En curso':'cal-bar-y',OK:'cal-bar-g',Pendiente:'cal-bar-b'};
 
   document.getElementById('venue-detail-content').innerHTML=`
@@ -1148,6 +1124,23 @@ function renderVenueDetail(code){
         <tbody>${tareas.length?tareas.map(t=>`<tr><td>${t.Tarea||'-'}</td><td>${t.Responsable||'-'}</td><td>${t.Categoria||'-'}</td><td>${duracionDue(t.Vencimiento)}</td><td>${hitoBadge(t.Estado)}</td></tr>`).join(''):'<tr><td class="tbl-empty" colspan="5">Sin tareas cargadas</td></tr>'}</tbody>
         </table></div>
       </div>
+      <!-- COMENTARIOS VENUE -->
+      <div class="card">
+        <div class="card-header">Comentarios &mdash; ${v.Nombre}</div>
+        <div id="comments-venue-${code}" style="padding:12px 16px"><div class="comment-inline-empty">Cargando...</div></div>
+        <div style="padding:16px;border-top:1px solid var(--border)">
+          <div class="comment-form-inline">
+            <div class="comment-form-row">
+              <input type="text" id="cv-autor-${code}" placeholder="Tu nombre">
+              <input type="text" id="cv-tema-${code}" placeholder="Tema (ej: Naming, Obra...)">
+            </div>
+            <textarea id="cv-texto-${code}" placeholder="Escribi tu comentario..."></textarea>
+            <div style="display:flex;justify-content:flex-end">
+              <button class="comment-submit-btn" id="cv-btn-${code}" onclick="submitCommentVenue('${code}')">Enviar comentario</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div>
       <div class="sk"><div class="sk-label">Avance de Obra</div><div class="sk-value" style="color:${venueColor(code)}">${av}%</div><div class="prog-bar" style="margin-top:8px"><div class="prog-fill ${venueFill(code)}" style="width:${av}%"></div></div></div>
@@ -1157,12 +1150,14 @@ function renderVenueDetail(code){
       <div class="section-card" style="margin-top:0">
         <div class="sc-title">Hitos del Venue</div>
         ${hitos.length?hitos.map(h=>{
-          const _pd=parseDate(h.Fecha);const d=_pd?_pd.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'–';
-          return `<div class="cal-item"><div class="cal-bar ${barClass[h.Estado]||'cal-bar-b'}"></div><div><div class="cal-title" style="font-size:11px">${h.Hito}</div><div class="cal-meta">${d} &middot; ${hitoBadge(h.Estado)}</div></div></div>`;
+          return `<div class="cal-item"><div class="cal-bar ${barClass[h.Estado]||'cal-bar-b'}"></div><div><div class="cal-title" style="font-size:11px">${h.Hito}</div><div class="cal-meta">${hitoBadge(h.Estado)}</div></div></div>`;
         }).join(''):'<div style="color:var(--muted);font-size:12px">Sin hitos cargados</div>'}
       </div>
     </div>
   </div>`;
+
+  // Render venue comments after HTML is in DOM
+  renderCommentsVenue(code);
 }
 </script>
 </body>
