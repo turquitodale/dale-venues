@@ -241,8 +241,8 @@ html{overflow-x:hidden;width:100%;}
   <div class="login-box">
     <div class="login-logo">dale<span>.</span>venues</div>
     <div class="login-sub">Acceso interno &mdash; Dale Play</div>
-    <input type="password" id="pw-input" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
-    <button onclick="doLogin()">Ingresar</button>
+    <input type="password" id="pw-input" placeholder="Contrasena" onkeydown="if(event.key==='Enter')loginApp()">
+    <button onclick="loginApp()">Ingresar</button>
     <div class="login-error" id="login-error">Contrasena incorrecta</div>
   </div>
 </div>
@@ -433,7 +433,7 @@ let agendaAnchor = new Date();
 // ═══════════════════════════
 // LOGIN
 // ═══════════════════════════
-function doLogin(){
+function loginApp(){
   const v=document.getElementById('pw-input').value;
   if(v===PASSWORD){
     document.getElementById('login-overlay').style.display='none';
