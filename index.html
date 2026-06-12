@@ -15,10 +15,7 @@
   --pmh:#4A3FD4;--cor:#059669;--ros:#D97706;
   --sidebar-w:220px;
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;width:100%;}
-html{overflow-x:hidden;width:100%;}
-::-webkit-scrollbar{display:none;}
-*{scrollbar-width:none;-ms-overflow-style:none;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
 
 /* ── LOGIN ── */
 #login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;}
@@ -411,8 +408,8 @@ html{overflow-x:hidden;width:100%;}
 // ═══════════════════════════════════
 // CONFIG — editá estas líneas
 // ═══════════════════════════════════
-const SHEET_ID       = '12JdkxYH-TObsyNsrgvPq5Jz9EQvkJQqpPmNk3TrGNSU';
-const PASSWORD       = 'dp26';
+const SHEET_ID       = 'TU_SHEET_ID_AQUI';
+const PASSWORD       = 'daleplay2026';
 const CALENDAR_PROXY = 'https://script.google.com/macros/s/AKfycbzt9q8O8k1YYpLskqigPa7jO25L08kYzMfcGreHBNu1gq-9a0pg-ow7Y4l98QqjmtY/exec';
 
 // ═══════════════════════════════════
@@ -579,7 +576,8 @@ function hitoBadge(e){
 }
 function duracionDue(fecha){
   if(!fecha) return '<span style="color:var(--muted)">-</span>';
-  const d=new Date(fecha),now=new Date();
+  const d=parseDate(fecha),now=new Date();
+  if(!d) return '<span style="color:var(--muted)">-</span>';
   const diff=Math.ceil((d-now)/(1000*60*60*24));
   const fmt=d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'});
   if(diff<=7) return `<span class="task-due due-urgent">${fmt}</span>`;
@@ -604,6 +602,32 @@ function addDays(d,n){const c=new Date(d);c.setDate(c.getDate()+n);return c;}
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
 function isToday(d){return sameDay(d,new Date());}
 
+// Accepts: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, or native Date
+function parseDate(val){
+  if(!val) return null;
+  if(val instanceof Date) return isNaN(val)?null:val;
+  const s=String(val).trim();
+  // YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)){
+    const d=new Date(s);
+    return isNaN(d)?null:d;
+  }
+  // DD/MM/YYYY or DD-MM-YYYY
+  const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m){
+    const d=new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]));
+    return isNaN(d)?null:d;
+  }
+  // Google Sheets gviz format: Date(yyyy,m,d)
+  const gm=s.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if(gm){
+    const d=new Date(parseInt(gm[1]),parseInt(gm[2]),parseInt(gm[3]));
+    return isNaN(d)?null:d;
+  }
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+
 // ═══════════════════════════════════
 // RENDER ALL
 // ═══════════════════════════════════
@@ -611,7 +635,6 @@ function renderAll(){
   renderOverview();
   renderComercial();
   renderTareas();
-  renderAgenda();
   ['overview','comercial','tareas','calendario'].forEach(v=>{
     const ld=document.getElementById(v+'-loading');
     const ct=document.getElementById(v+'-content');
@@ -665,9 +688,9 @@ function renderOverview(){
 
   renderPieCharts();
 
-  const criticos=DATA.hitos.filter(h=>{const e=(h.Estado||'').toLowerCase();return e==='urgente'||e==='en riesgo';}).sort((a,b)=>new Date(a.Fecha)-new Date(b.Fecha));
+  const criticos=DATA.hitos.filter(h=>{const e=(h.Estado||'').toLowerCase();return e==='urgente'||e==='en riesgo';}).sort((a,b)=>(parseDate(a.Fecha)||0)-(parseDate(b.Fecha)||0));
   document.getElementById('tbl-hitos-criticos').innerHTML=criticos.length
-    ?criticos.map(h=>{const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'–';return `<tr><td>${h.Hito}</td><td>${venueChip(h.Venue)}</td><td>${d}</td><td>${hitoBadge(h.Estado)}</td></tr>`;}).join('')
+    ?criticos.map(h=>{const _d=parseDate(h.Fecha);const d=_d?_d.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}):'–';return `<tr><td>${h.Hito}</td><td>${venueChip(h.Venue)}</td><td>${d}</td><td>${hitoBadge(h.Estado)}</td></tr>`;}).join('')
     :`<tr><td class="tbl-empty" colspan="4">Sin hitos urgentes o en riesgo</td></tr>`;
 }
 
@@ -754,7 +777,7 @@ function renderTareas(filter){
   let tareas=[...DATA.tareas];
   if(currentTareaFilter==='urgente') tareas=tareas.filter(t=>(t.Estado||'').toLowerCase()==='urgente');
   else if(currentTareaFilter!=='todas') tareas=tareas.filter(t=>(t.Venue||'').trim().toUpperCase()===currentTareaFilter.toUpperCase());
-  tareas.sort((a,b)=>new Date(a.Vencimiento)-new Date(b.Vencimiento));
+  tareas.sort((a,b)=>(parseDate(a.Vencimiento)||0)-(parseDate(b.Vencimiento)||0));
   document.getElementById('tareas-count').textContent=tareas.length+' tareas';
   document.getElementById('tbl-tareas').innerHTML=tareas.length
     ?tareas.map(t=>`<tr><td>${t.Tarea||'-'}</td><td>${venueChip(t.Venue)}</td><td>${t.Responsable||'-'}</td><td style="color:var(--secondary)">${t.Categoria||'-'}</td><td>${duracionDue(t.Vencimiento)}</td><td>${hitoBadge(t.Estado)}</td></tr>`).join('')
@@ -838,8 +861,8 @@ function renderAgenda(){
   const hitosByDay={};
   DATA.hitos.forEach(h=>{
     if(!h.Fecha) return;
-    const d=new Date(h.Fecha);
-    if(isNaN(d)) return;
+    const d=parseDate(h.Fecha);
+    if(!d) return;
     const k=d.toDateString();
     if(!hitosByDay[k]) hitosByDay[k]=[];
     hitosByDay[k].push(h);
@@ -974,7 +997,7 @@ function renderVenueDetail(code){
       <div class="section-card" style="margin-top:0">
         <div class="sc-title">Hitos del Venue</div>
         ${hitos.length?hitos.map(h=>{
-          const d=h.Fecha?new Date(h.Fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'–';
+          const _pd=parseDate(h.Fecha);const d=_pd?_pd.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}):'–';
           return `<div class="cal-item"><div class="cal-bar ${barClass[h.Estado]||'cal-bar-b'}"></div><div><div class="cal-title" style="font-size:11px">${h.Hito}</div><div class="cal-meta">${d} &middot; ${hitoBadge(h.Estado)}</div></div></div>`;
         }).join(''):'<div style="color:var(--muted);font-size:12px">Sin hitos cargados</div>'}
       </div>
