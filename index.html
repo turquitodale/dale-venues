@@ -4,7 +4,112 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>dale.venues</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js">
+// ═══════════════════════════════════
+// COMMENTS
+// ═══════════════════════════════════
+let COMMENTS = [];
+let currentCommentContext = {seccion:'', referencia:''};
+
+async function loadComments(){
+  try{
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Comentarios`;
+    const res=await fetch(url);
+    const text=await res.text();
+    const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const cols=json.table.cols.map(c=>c.label);
+    COMMENTS=(json.table.rows||[]).map(r=>{
+      const obj={};
+      cols.forEach((c,i)=>{obj[c]=r.c&&r.c[i]?r.c[i].v:null;});
+      return obj;
+    }).filter(r=>r.Comentario);
+  }catch(e){
+    COMMENTS=[];
+  }
+}
+
+function openComments(seccion, referencia){
+  currentCommentContext={seccion, referencia};
+  document.getElementById('comment-panel-title').textContent='Comentarios — '+seccion;
+  document.getElementById('comment-panel-ref').textContent=referencia!=='General'?referencia:'';
+  document.getElementById('comment-overlay').classList.add('open');
+  renderCommentList(seccion, referencia);
+}
+
+function closeCommentPanel(){
+  document.getElementById('comment-overlay').classList.remove('open');
+}
+
+function closeComments(e){
+  if(e.target===document.getElementById('comment-overlay')) closeCommentPanel();
+}
+
+function renderCommentList(seccion, referencia){
+  const list=document.getElementById('comment-list');
+  const filtered=COMMENTS.filter(c=>
+    (!seccion||c.Seccion===seccion)
+  );
+  if(!filtered.length){
+    list.innerHTML='<div class="comment-empty">Sin comentarios todavia.<br>Se el primero en comentar.</div>';
+    return;
+  }
+  list.innerHTML=filtered.reverse().map(c=>`
+    <div class="comment-item">
+      <div class="comment-item-header">
+        <span class="comment-author">${c.Autor||'Anonimo'}</span>
+        <span class="comment-date">${c.Fecha||''}</span>
+      </div>
+      <div class="comment-text">${c.Comentario}</div>
+      ${c.Referencia&&c.Referencia!=='-'?`<div style="font-size:10px;color:var(--muted);margin-top:4px">${c.Seccion} &middot; ${c.Referencia}</div>`:''}
+    </div>
+  `).join('');
+}
+
+async function submitComment(){
+  const autor=document.getElementById('comment-autor').value.trim();
+  const texto=document.getElementById('comment-texto').value.trim();
+  if(!texto){
+    document.getElementById('comment-texto').focus();
+    return;
+  }
+  const btn=document.getElementById('comment-submit-btn');
+  const sending=document.getElementById('comment-sending');
+  btn.disabled=true;
+  btn.style.display='none';
+  sending.style.display='block';
+
+  try{
+    await fetch(CALENDAR_PROXY, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        autor: autor||'Anonimo',
+        seccion: currentCommentContext.seccion,
+        referencia: currentCommentContext.referencia,
+        comentario: texto
+      }),
+      mode:'no-cors'
+    });
+    // Add optimistically to local list
+    COMMENTS.push({
+      Fecha: new Date().toLocaleString('es-AR'),
+      Autor: autor||'Anonimo',
+      Seccion: currentCommentContext.seccion,
+      Referencia: currentCommentContext.referencia,
+      Comentario: texto
+    });
+    document.getElementById('comment-autor').value='';
+    document.getElementById('comment-texto').value='';
+    renderCommentList(currentCommentContext.seccion, currentCommentContext.referencia);
+  }catch(e){
+    console.error('Comment error:',e);
+  }
+  btn.disabled=false;
+  btn.style.display='block';
+  sending.style.display='none';
+}
+
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -260,6 +365,35 @@ html{overflow-x:hidden;width:100%;}
   .main{padding:12px;}
   .login-box{padding:28px 20px;}
 }
+
+/* ── COMMENTS ── */
+.comment-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;}
+.comment-btn:hover{border-color:var(--pulse);color:var(--text);}
+.comment-btn .cb-count{background:var(--accent);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:600;}
+.comment-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;}
+.comment-overlay.open{display:flex;align-items:flex-end;justify-content:flex-end;}
+.comment-panel{background:var(--surface);width:100%;max-width:420px;height:100vh;display:flex;flex-direction:column;border-left:1px solid var(--border);animation:slideIn 0.25s ease;}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.comment-panel-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.comment-panel-title{font-size:14px;font-weight:600;}
+.comment-panel-ref{font-size:11px;color:var(--muted);margin-top:2px;}
+.comment-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;}
+.comment-list{flex:1;overflow-y:auto;padding:16px;}
+.comment-item{background:var(--surface2);border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+.comment-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.comment-author{font-size:12px;font-weight:600;color:var(--pulse);}
+.comment-date{font-size:10px;color:var(--muted);}
+.comment-text{font-size:12px;color:var(--text);line-height:1.5;}
+.comment-empty{text-align:center;padding:40px 0;color:var(--muted);font-size:12px;}
+.comment-form{padding:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
+.comment-form input,.comment-form textarea{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 12px;font-size:12px;font-family:'Inter',sans-serif;outline:none;width:100%;}
+.comment-form input:focus,.comment-form textarea:focus{border-color:var(--accent);}
+.comment-form textarea{resize:none;height:80px;line-height:1.5;}
+.comment-submit{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background 0.15s;}
+.comment-submit:hover{background:var(--pulse);}
+.comment-submit:disabled{opacity:0.5;cursor:not-allowed;}
+.comment-sending{font-size:11px;color:var(--muted);text-align:center;}
+@media(max-width:900px){.comment-panel{max-width:100%;}}
 </style>
 </head>
 <body>
@@ -323,7 +457,7 @@ html{overflow-x:hidden;width:100%;}
           <div style="padding:16px"><div class="pie-grid" id="pie-grid"></div></div>
         </div>
         <div class="card">
-          <div class="card-header">Hitos Criticos<button class="card-action" onclick="nav('calendario')">Ver Calendario &rarr;</button></div>
+          <div class="card-header">Hitos Criticos<div style="display:flex;gap:8px;align-items:center"><button class="comment-btn" onclick="openComments('Hitos','General')">&#128172; <span id="cb-hitos-general">Comentarios</span></button><button class="card-action" onclick="nav('calendario')">Ver Calendario &rarr;</button></div></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hito</th><th>Venue</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="tbl-hitos-criticos"></tbody></table></div>
         </div>
       </div>
@@ -345,7 +479,7 @@ html{overflow-x:hidden;width:100%;}
           <button class="filter-btn" onclick="filterDeals('ROS',this)">Rosario</button>
         </div>
         <div class="card">
-          <div class="card-header">Pipeline de Acuerdos <span class="card-sub" id="pipeline-count"></span></div>
+          <div class="card-header"><span>Pipeline de Acuerdos <span class="card-sub" id="pipeline-count"></span></span><button class="comment-btn" onclick="openComments('Comercial','Pipeline')">&#128172; Comentarios</button></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Empresa</th><th>Venue</th><th>Categoria</th><th>Valor</th><th>Duracion</th><th>Prob.</th><th>Estado</th><th>Prox. accion</th></tr></thead><tbody id="tbl-deals-full"></tbody></table></div>
         </div>
       </div>
@@ -367,7 +501,7 @@ html{overflow-x:hidden;width:100%;}
           <button class="filter-btn" onclick="filterTareas('urgente',this)">Urgentes</button>
         </div>
         <div class="card">
-          <div class="card-header">Tareas Activas <span class="card-sub" id="tareas-count"></span></div>
+          <div class="card-header"><span>Tareas Activas <span class="card-sub" id="tareas-count"></span></span><button class="comment-btn" onclick="openComments('Tareas','General')">&#128172; Comentarios</button></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tarea</th><th>Venue</th><th>Responsable</th><th>Categoria</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody id="tbl-tareas"></tbody></table></div>
         </div>
       </div>
@@ -403,7 +537,29 @@ html{overflow-x:hidden;width:100%;}
       <div id="venue-detail-content"></div>
     </div>
 
-  </main>
+  
+<!-- COMMENTS PANEL -->
+<div class="comment-overlay" id="comment-overlay" onclick="closeComments(event)">
+  <div class="comment-panel">
+    <div class="comment-panel-header">
+      <div>
+        <div class="comment-panel-title" id="comment-panel-title">Comentarios</div>
+        <div class="comment-panel-ref" id="comment-panel-ref"></div>
+      </div>
+      <button class="comment-close" onclick="closeCommentPanel()">&#x2715;</button>
+    </div>
+    <div class="comment-list" id="comment-list">
+      <div class="comment-empty">Cargando comentarios...</div>
+    </div>
+    <div class="comment-form">
+      <input type="text" id="comment-autor" placeholder="Tu nombre">
+      <textarea id="comment-texto" placeholder="Escribi tu comentario..."></textarea>
+      <button class="comment-submit" id="comment-submit-btn" onclick="submitComment()">Enviar comentario</button>
+      <div class="comment-sending" id="comment-sending" style="display:none">Enviando...</div>
+    </div>
+  </div>
+</div>
+</main>
 </div>
 </div>
 
@@ -504,8 +660,9 @@ async function loadAllData(){
     showErr('No se pudo conectar con Google Sheets. Verifica el Sheet ID y que sea publico.');
     loadDemoData();
   }
-  // Load GCal in background
+  // Load GCal and comments in background
   loadCalendarEvents();
+  loadComments();
 }
 
 function reloadData(){ loadAllData(); }
