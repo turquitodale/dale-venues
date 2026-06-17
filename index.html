@@ -12,7 +12,7 @@
   --bg:#0B0C10;--surface:#13151C;--surface2:#1A1D28;--border:#252836;
   --accent:#4A3FD4;--pulse:#7B72E8;--green:#22C55E;--yellow:#F59E0B;--red:#EF4444;
   --text:#F2F0EB;--muted:#6B7280;--secondary:#9CA3AF;
-  --pmh:#4A3FD4;--cor:#059669;--ros:#D97706;--sidebar-w:220px;
+  --mh:#4A3FD4;--cor:#059669;--ros:#D97706;--sidebar-w:220px;
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;width:100%;}
 html{overflow-x:hidden;width:100%;}
@@ -71,7 +71,7 @@ html{overflow-x:hidden;width:100%;}
 .venue-card:hover{border-color:var(--pulse);transform:translateY(-2px);}
 .vc-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
 .venue-tag{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:4px;}
-.tag-pmh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
+.tag-mh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
 .tag-cor{background:rgba(5,150,105,0.2);color:#6EE7B7;}
 .tag-ros{background:rgba(217,119,6,0.2);color:#FCD34D;}
 .status-pill{font-size:11px;display:flex;align-items:center;gap:5px;color:var(--muted);}
@@ -87,7 +87,7 @@ html{overflow-x:hidden;width:100%;}
 .prog-pct{font-size:12px;font-weight:600;}
 .prog-bar{height:4px;background:var(--surface2);border-radius:3px;margin-bottom:14px;overflow:hidden;}
 .prog-fill{height:100%;border-radius:3px;}
-.fill-pmh{background:linear-gradient(90deg,var(--pmh),var(--pulse));}
+.fill-mh{background:linear-gradient(90deg,var(--mh),var(--pulse));}
 .fill-cor{background:linear-gradient(90deg,#059669,#34D399);}
 .fill-ros{background:linear-gradient(90deg,#D97706,#FCD34D);}
 .vc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
@@ -110,7 +110,7 @@ html{overflow-x:hidden;width:100%;}
 .tbl tr:hover td{background:var(--surface2);}
 .tbl-empty{color:var(--muted);text-align:center;padding:30px!important;font-size:12px;}
 .chip{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
-.chip-pmh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
+.chip-mh{background:rgba(74,63,212,0.2);color:#A5A0F5;}
 .chip-cor{background:rgba(5,150,105,0.2);color:#6EE7B7;}
 .chip-ros{background:rgba(217,119,6,0.2);color:#FCD34D;}
 .chip-all{background:rgba(107,114,128,0.2);color:#9CA3AF;}
@@ -265,7 +265,7 @@ html{overflow-x:hidden;width:100%;}
     <button class="nav-item" onclick="nav('tareas')"><span class="icon">&#9723;</span>Tareas</button>
     <button class="nav-item" onclick="nav('calendario')"><span class="icon">&#9711;</span>Calendario</button>
     <div class="sidebar-section" style="margin-top:8px;">Venues</div>
-    <button class="nav-item" onclick="showVenueDetail('PMH')"><span class="vdot" style="background:#4A3FD4"></span>Palermo Music Hall</button>
+    <button class="nav-item" onclick="showVenueDetail('MH')"><span class="vdot" style="background:#4A3FD4"></span>Palermo Music Hall</button>
     <button class="nav-item" onclick="showVenueDetail('CBA')"><span class="vdot" style="background:#059669"></span>Cordoba Arena</button>
     <button class="nav-item" onclick="showVenueDetail('ROS')"><span class="vdot" style="background:#D97706"></span>Arena Rosario</button>
     <div class="sidebar-bottom">
@@ -306,7 +306,7 @@ html{overflow-x:hidden;width:100%;}
             <div class="comment-form-inline">
               <div class="comment-form-row">
                 <input type="text" id="cov-autor" placeholder="Tu nombre">
-                <input type="text" id="cov-tema" placeholder="Tema (ej: PMH Naming)">
+                <input type="text" id="cov-tema" placeholder="Tema (ej: MH Naming)">
               </div>
               <textarea id="cov-texto" placeholder="Escribi tu comentario..."></textarea>
               <div style="display:flex;justify-content:flex-end">
@@ -330,7 +330,7 @@ html{overflow-x:hidden;width:100%;}
         <div class="kpi-row kpi-4" id="comercial-kpis"></div>
         <div class="filter-row" id="comercial-filters">
           <button class="filter-btn active" onclick="filterDeals('todos',this)">Todos</button>
-          <button class="filter-btn" onclick="filterDeals('PMH',this)">PMH</button>
+          <button class="filter-btn" onclick="filterDeals('MH',this)">MH</button>
           <button class="filter-btn" onclick="filterDeals('CBA',this)">Cordoba</button>
           <button class="filter-btn" onclick="filterDeals('ROS',this)">Rosario</button>
         </div>
@@ -351,7 +351,7 @@ html{overflow-x:hidden;width:100%;}
       <div id="tareas-content" style="display:none">
         <div class="filter-row">
           <button class="filter-btn active" onclick="filterTareas('todas',this)">Todas</button>
-          <button class="filter-btn" onclick="filterTareas('PMH',this)">PMH</button>
+          <button class="filter-btn" onclick="filterTareas('MH',this)">MH</button>
           <button class="filter-btn" onclick="filterTareas('CBA',this)">Cordoba</button>
           <button class="filter-btn" onclick="filterTareas('ROS',this)">Rosario</button>
           <button class="filter-btn" onclick="filterTareas('urgente',this)">Urgentes</button>
@@ -534,29 +534,29 @@ function showErr(msg){
 // ═══════════════════════════
 function loadDemoData(){
   DATA.venues=[
-    {Codigo:'PMH',Nombre:'Palermo Music Hall',Ciudad:'Buenos Aires',Capacidad:15000,Apertura:'Q1 2027',Inversion:'USD 18.000.000',Avance:68,NamingEstado:'Cerrado',NamingEmpresa:'Banco Galicia',ProximoHito:'Licencias municipales',StatusObra:'En obra'},
+    {Codigo:'MH',Nombre:'Palermo Music Hall',Ciudad:'Buenos Aires',Capacidad:15000,Apertura:'Q1 2027',Inversion:'USD 18.000.000',Avance:68,NamingEstado:'Cerrado',NamingEmpresa:'Banco Galicia',ProximoHito:'Licencias municipales',StatusObra:'En obra'},
     {Codigo:'CBA',Nombre:'Cordoba Arena',Ciudad:'Cordoba',Capacidad:12000,Apertura:'Q3 2027',Inversion:'USD 15.000.000',Avance:45,NamingEstado:'Negociando',NamingEmpresa:'Quilmes',ProximoHito:'Estructura de techo',StatusObra:'On track'},
     {Codigo:'ROS',Nombre:'Arena La Nueva Rural',Ciudad:'Rosario',Capacidad:10000,Apertura:'Q4 2027',Inversion:'USD 14.000.000',Avance:31,NamingEstado:'Pendiente',NamingEmpresa:'-',ProximoHito:'Permiso ambiental',StatusObra:'Demora'},
   ];
   DATA.deals=[
-    {Empresa:'Banco Galicia',Venue:'PMH',Categoria:'Naming Rights',Valor:'USD 2.800.000',Duracion:'5 anios',Probabilidad:'90%',Estado:'Cerrado',ProximaAccion:'Firma contrato'},
-    {Empresa:'Claro',Venue:'PMH',Categoria:'Official',Valor:'USD 800.000',Duracion:'3 anios',Probabilidad:'75%',Estado:'Cerrado',ProximaAccion:'Revisar addenda'},
-    {Empresa:'Heineken',Venue:'PMH',Categoria:'F&B',Valor:'USD 500.000',Duracion:'3 anios',Probabilidad:'80%',Estado:'Avanzado',ProximaAccion:'Firma julio'},
+    {Empresa:'Banco Galicia',Venue:'MH',Categoria:'Naming Rights',Valor:'USD 2.800.000',Duracion:'5 anios',Probabilidad:'90%',Estado:'Cerrado',ProximaAccion:'Firma contrato'},
+    {Empresa:'Claro',Venue:'MH',Categoria:'Official',Valor:'USD 800.000',Duracion:'3 anios',Probabilidad:'75%',Estado:'Cerrado',ProximaAccion:'Revisar addenda'},
+    {Empresa:'Heineken',Venue:'MH',Categoria:'F&B',Valor:'USD 500.000',Duracion:'3 anios',Probabilidad:'80%',Estado:'Avanzado',ProximaAccion:'Firma julio'},
     {Empresa:'Quilmes',Venue:'CBA',Categoria:'Naming Rights',Valor:'USD 1.500.000',Duracion:'4 anios',Probabilidad:'55%',Estado:'Negociando',ProximaAccion:'Counter-propuesta'},
     {Empresa:'YPF',Venue:'CBA',Categoria:'Official',Valor:'USD 600.000',Duracion:'2 anios',Probabilidad:'80%',Estado:'Cerrado',ProximaAccion:'Aprobacion interna'},
     {Empresa:'Rappi',Venue:'ROS',Categoria:'F&B',Valor:'USD 400.000',Duracion:'2 anios',Probabilidad:'30%',Estado:'Prospect',ProximaAccion:'Primer meeting'},
     {Empresa:'Acero Sur',Venue:'ROS',Categoria:'Canje materiales',Valor:'USD 1.200.000',Duracion:'-',Probabilidad:'60%',Estado:'Negociando',ProximaAccion:'Valuar stock'},
   ];
   DATA.tareas=[
-    {Tarea:'Gestionar licencias municipales',Venue:'PMH',Responsable:'Turco',Categoria:'Legal',Vencimiento:'2026-06-30',Estado:'Urgente'},
-    {Tarea:'Cerrar contrato Naming Galicia',Venue:'PMH',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-10',Estado:'En curso'},
+    {Tarea:'Gestionar licencias municipales',Venue:'MH',Responsable:'Turco',Categoria:'Legal',Vencimiento:'2026-06-30',Estado:'Urgente'},
+    {Tarea:'Cerrar contrato Naming Galicia',Venue:'MH',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-10',Estado:'En curso'},
     {Tarea:'Counter-propuesta Quilmes',Venue:'CBA',Responsable:'Turco',Categoria:'Comercial',Vencimiento:'2026-07-15',Estado:'En curso'},
     {Tarea:'Gestion permiso ambiental',Venue:'ROS',Responsable:'Legal',Categoria:'Legal',Vencimiento:'2026-07-22',Estado:'Urgente'},
-    {Tarea:'Definir F&B operator',Venue:'PMH',Responsable:'Ops',Categoria:'Operativo',Vencimiento:'2026-08-01',Estado:'Pendiente'},
+    {Tarea:'Definir F&B operator',Venue:'MH',Responsable:'Ops',Categoria:'Operativo',Vencimiento:'2026-08-01',Estado:'Pendiente'},
   ];
   DATA.hitos=[
-    {Hito:'Licencias municipales',Venue:'PMH',Fecha:'2026-06-30',Categoria:'Legal',Estado:'Urgente'},
-    {Hito:'Cierre Naming Galicia',Venue:'PMH',Fecha:'2026-07-10',Categoria:'Comercial',Estado:'En curso'},
+    {Hito:'Licencias municipales',Venue:'MH',Fecha:'2026-06-30',Categoria:'Legal',Estado:'Urgente'},
+    {Hito:'Cierre Naming Galicia',Venue:'MH',Fecha:'2026-07-10',Categoria:'Comercial',Estado:'En curso'},
     {Hito:'Estructura de techo',Venue:'CBA',Fecha:'2026-07-15',Categoria:'Obra',Estado:'OK'},
     {Hito:'Permiso ambiental',Venue:'ROS',Fecha:'2026-07-22',Categoria:'Legal',Estado:'En riesgo'},
     {Hito:'Presentacion Directorio',Venue:'Todos',Fecha:'2026-08-01',Categoria:'Gestion',Estado:'Pendiente'},
@@ -568,7 +568,7 @@ function loadDemoData(){
 // HELPERS
 // ═══════════════════════════
 function venueChip(code){
-  const m={PMH:'chip-pmh',CBA:'chip-cor',ROS:'chip-ros'};
+  const m={MH:'chip-mh',CBA:'chip-cor',ROS:'chip-ros'};
   return `<span class="chip ${m[code]||'chip-all'}">${code||'-'}</span>`;
 }
 function dealBadge(e){
@@ -589,9 +589,9 @@ function duracionDue(fecha){
   if(diff<=21) return `<span class="task-due due-soon">${fmt}</span>`;
   return `<span class="task-due due-ok">${fmt}</span>`;
 }
-function venueColor(c){return {PMH:'var(--pmh)',CBA:'var(--cor)',ROS:'var(--ros)'}[c]||'var(--accent)';}
-function venueFill(c){return {PMH:'fill-pmh',CBA:'fill-cor',ROS:'fill-ros'}[c]||'fill-pmh';}
-function venueTagClass(c){return {PMH:'tag-pmh',CBA:'tag-cor',ROS:'tag-ros'}[c]||'tag-pmh';}
+function venueColor(c){return {MH:'var(--mh)',CBA:'var(--cor)',ROS:'var(--ros)'}[c]||'var(--accent)';}
+function venueFill(c){return {MH:'fill-mh',CBA:'fill-cor',ROS:'fill-ros'}[c]||'fill-mh';}
+function venueTagClass(c){return {MH:'tag-mh',CBA:'tag-cor',ROS:'tag-ros'}[c]||'tag-mh';}
 function isClosed(e){return (e||'').trim().toLowerCase()==='cerrado';}
 function countBy(arr,field){return arr.reduce((a,i)=>{const k=i[field]||'Sin categoria';a[k]=(a[k]||0)+1;return a;},{});}
 
@@ -756,7 +756,7 @@ const PIE_COLORS=['#4A3FD4','#7B72E8','#22C55E','#F59E0B','#EF4444','#059669','#
 function renderPieCharts(){
   Object.values(pieCharts).forEach(c=>{try{c.destroy();}catch(e){}});
   pieCharts={};
-  const venues=DATA.venues.length?DATA.venues:[{Codigo:'PMH'},{Codigo:'CBA'},{Codigo:'ROS'}];
+  const venues=DATA.venues.length?DATA.venues:[{Codigo:'MH'},{Codigo:'CBA'},{Codigo:'ROS'}];
   document.getElementById('pie-grid').innerHTML=venues.map(v=>{
     const vd=DATA.deals.filter(d=>d.Venue===v.Codigo);
     const byCat=countBy(vd,'Categoria');
