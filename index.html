@@ -655,6 +655,11 @@ function formatMonto(n){
   if(n>=1000000) return 'USD '+(n/1000000).toFixed(1).replace('.',',')+'M';
   if(n>=1000) return 'USD '+(n/1000).toFixed(0)+'K';
   return 'USD '+n.toFixed(0);
+  function formatValorDisplay(val){
+  const n = parseValor(val);
+  if(!n) return val || '-';
+  return 'USD ' + Math.round(n).toLocaleString('es-AR');
+}
 }
 
 function sumValores(deals){
@@ -812,7 +817,7 @@ function renderDealsTable(filter){
   if(currentDealFilter!=='todos') deals=deals.filter(d=>(d.Venue||'').trim().toUpperCase()===currentDealFilter.toUpperCase());
   document.getElementById('pipeline-count').textContent=deals.length+' acuerdos';
   document.getElementById('tbl-deals-full').innerHTML=deals.length
-    ?deals.map(d=>`<tr><td><strong>${d.Empresa||'-'}</strong></td><td>${venueChip(d.Venue)}</td><td>${d.Categoria||'-'}</td><td>${d.Valor||'-'}</td><td>${d.Duracion||'-'}</td><td style="color:${parseFloat(d.Probabilidad)>70?'var(--green)':parseFloat(d.Probabilidad)>40?'var(--yellow)':'var(--muted)'}">${d.Probabilidad||'-'}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'-'}</td></tr>`).join('')
+    ?deals.map(d=>`<tr><td><strong>${d.Empresa||'-'}</strong></td><td>${venueChip(d.Venue)}</td><td>${d.Categoria||'-'}</td><td>${formatValorDisplay(d.Valor)}</td><td>${d.Duracion||'-'}</td><td style="color:${parseFloat(d.Probabilidad)>70?'var(--green)':parseFloat(d.Probabilidad)>40?'var(--yellow)':'var(--muted)'}">${d.Probabilidad||'-'}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'-'}</td></tr>`).join('')
     :`<tr><td class="tbl-empty" colspan="8">Sin acuerdos para este filtro</td></tr>`;
 }
 function filterDeals(f,btn){
@@ -1095,7 +1100,7 @@ function renderVenueDetail(code){
         <div class="card-header">Acuerdos Comerciales <span class="card-sub">${deals.length} registrados</span></div>
         <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Empresa</th><th>Categoria</th><th>Valor</th><th>Estado</th><th>Prox. accion</th></tr></thead>
         <tbody>${deals.length
-          ?deals.map(d=>`<tr><td><strong>${d.Empresa||'-'}</strong></td><td>${d.Categoria||'-'}</td><td>${d.Valor||'-'}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'-'}</td></tr>`).join('')
+          ?deals.map(d=>`<tr><td><strong>${d.Empresa||'-'}</strong></td><td>${d.Categoria||'-'}</td><td>${formatValorDisplay(d.Valor)}</td><td>${dealBadge(d.Estado)}</td><td style="color:var(--secondary);font-size:11px">${d.ProximaAccion||'-'}</td></tr>`).join('')
           :'<tr><td class="tbl-empty" colspan="5">Sin acuerdos cargados</td></tr>'}</tbody>
         </table></div>
       </div>
