@@ -241,8 +241,8 @@ html{overflow-x:hidden;width:100%;}
   <div class="login-box">
     <div class="login-logo">dale<span>.</span>venues</div>
     <div class="login-sub">Acceso interno &mdash; Dale Play</div>
-    <input type="password" id="pw-input" placeholder="Contrasena" onkeydown="if(event.key==='Enter')loginApp()">
-    <button onclick="loginApp()">Ingresar</button>
+    <input type="password" id="pw-input" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="login-error">Contrasena incorrecta</div>
   </div>
 </div>
@@ -433,7 +433,7 @@ let agendaAnchor = new Date();
 // ═══════════════════════════
 // LOGIN
 // ═══════════════════════════
-function loginApp(){
+function doLogin(){
   const v=document.getElementById('pw-input').value;
   if(v===PASSWORD){
     document.getElementById('login-overlay').style.display='none';
@@ -658,9 +658,13 @@ function formatMonto(n){
 }
 
 function formatValorDisplay(val){
-  const n = parseValor(val);
-  if(!n) return val || '-';
-  return 'USD ' + Math.round(n).toLocaleString('es-AR');
+  const n=parseValor(val);
+  if(!n) return val||'-';
+  return 'USD '+Math.round(n).toLocaleString('es-AR');
+}
+
+function sumValores(deals){
+  return deals.reduce((sum,d)=>sum+parseValor(d.Valor),0);
 }
 
 function startOfWeek(d){const c=new Date(d);const day=c.getDay();const diff=day===0?-6:1-day;c.setDate(c.getDate()+diff);c.setHours(0,0,0,0);return c;}
