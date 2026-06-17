@@ -655,15 +655,12 @@ function formatMonto(n){
   if(n>=1000000) return 'USD '+(n/1000000).toFixed(1).replace('.',',')+'M';
   if(n>=1000) return 'USD '+(n/1000).toFixed(0)+'K';
   return 'USD '+n.toFixed(0);
-  function formatValorDisplay(val){
+}
+
+function formatValorDisplay(val){
   const n = parseValor(val);
   if(!n) return val || '-';
   return 'USD ' + Math.round(n).toLocaleString('es-AR');
-}
-}
-
-function sumValores(deals){
-  return deals.reduce((sum,d)=>sum+parseValor(d.Valor),0);
 }
 
 function startOfWeek(d){const c=new Date(d);const day=c.getDay();const diff=day===0?-6:1-day;c.setDate(c.getDate()+diff);c.setHours(0,0,0,0);return c;}
