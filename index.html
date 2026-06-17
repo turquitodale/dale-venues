@@ -592,7 +592,7 @@ function duracionDue(fecha){
 function venueColor(c){return {PMH:'var(--pmh)',CBA:'var(--cor)',ROS:'var(--ros)'}[c]||'var(--accent)';}
 function venueFill(c){return {PMH:'fill-pmh',CBA:'fill-cor',ROS:'fill-ros'}[c]||'fill-pmh';}
 function venueTagClass(c){return {PMH:'tag-pmh',CBA:'tag-cor',ROS:'tag-ros'}[c]||'tag-pmh';}
-function isClosed(e){const s=(e||'').toLowerCase();return s==='cerrado'||s==='avanzado'||s==='cerrando';}
+function isClosed(e){return (e||'').trim().toLowerCase()==='cerrado';}
 function countBy(arr,field){return arr.reduce((a,i)=>{const k=i[field]||'Sin categoria';a[k]=(a[k]||0)+1;return a;},{});}
 
 // Parsea fechas en cualquier formato incluyendo el de Google Sheets
