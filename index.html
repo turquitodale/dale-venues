@@ -250,6 +250,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
 .mapa-venue-meta{font-size:11px;color:var(--muted);}
 .mapa-venue-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:3px;margin-top:5px;font-weight:500;}
 /* ─── PALCOS VIEW ─────────────────────────────────────── */
+.palco-row:hover{background:var(--surface2)!important;}
 .palco-arena-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .palco-arena-wrap svg{display:block;}
 @media(max-width:900px){
@@ -536,7 +537,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
 // CONFIG
 // ═══════════════════════════
 // FUENTE ÚNICA DE DATOS — reemplazar con el ID del Google Sheet de Pipeline v2
-const PIPELINE_SHEET_ID = '15aTiW46aXH90vWgRiwj9Nlh5WYptqBaY'; // ← único ID necesario
+const PIPELINE_SHEET_ID = 'TU_PIPELINE_SHEET_ID'; // ← único ID necesario
 const VENUE_MAP = {
   'Arena Córdoba':'CBA','Arena Cordoba':'CBA',
   'Arena Rosario':'ROS',
@@ -1670,59 +1671,168 @@ function renderPalcosTab(){
   const palcos=def[palcoNivel];
   const left=palcos.filter(function(p){return p.side==='left';});
   const right=palcos.filter(function(p){return p.side==='right';});
-  container.innerHTML='<div class="palco-arena-wrap">'+buildArenaSVG(palcoVenue,left,right)+'</div>';
+  container.innerHTML=buildPalcosView(palcoVenue,left,right,palcoNivel);
+}
+
+function buildPalcosView(venue,leftPalcos,rightPalcos,nivel){
+  /* Determines image path per venue/level */
+  var imgMap={
+    CBA:{N1:'plano-palcos-cba-n1.jpg',N2:'plano-palcos-cba-n2.jpg'},
+    ROS:{N1:'',N2:''},
+    MH:{N1:'',N2:''}
+  };
+  var imgSrc=(imgMap[venue]&&imgMap[venue][nivel])||'';
+
+  /* Status badge */
+  function badge(st){
+    var lbls={disponible:'Disponible',negociacion:'En negociación',reservado:'Reservado',vendido:'Vendido'};
+    var cols={disponible:'var(--green)',negociacion:'var(--yellow)',reservado:'var(--accent)',vendido:'var(--red)'};
+    return '<span style="display:inline-flex;align-items:center;gap:5px">'
+      +'<span style="width:7px;height:7px;border-radius:50%;background:'+(cols[st]||'var(--green)')+';flex-shrink:0"></span>'
+      +'<span style="font-size:11px;font-family:var(--mono);color:'+(cols[st]||'var(--green)')+'">'+(lbls[st]||st)+'</span>'
+      +'</span>';
+  }
+
+  /* Table row */
+  function row(p){
+    var e=getPalcoEntry(venue,p.id);
+    var st=e.status||'disponible';
+    var isL=p.tipo==='lounge';
+    var lbl=p.label||p.id;
+    var area=p.area||'—';
+    var aforo=p.aforo?p.aforo+'p':'—';
+    var empresa=e.empresa||'';
+    var precio=e.precio?'$'+Number(e.precio).toLocaleString('es-AR'):'';
+    var stBg=st==='disponible'?'':'background:rgba(255,255,255,0.03)';
+    return '<tr class="palco-row" onclick="openPalcoModal(\''+p.id+'\',\''+venue+'\')" style="cursor:pointer;'+stBg+'">'
+      +'<td style="font-weight:700;font-family:var(--mono);font-size:12px;color:var(--text);padding:9px 14px;border-bottom:1px solid var(--border)">'+(isL?'<span style="font-size:10px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:3px;margin-right:5px">VIP</span>':'')+lbl+'</td>'
+      +'<td style="font-size:11px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--border)">'+area+'</td>'
+      +'<td style="font-size:11px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--border)">'+aforo+'</td>'
+      +'<td style="padding:9px 14px;border-bottom:1px solid var(--border)">'+badge(st)+'</td>'
+      +'<td style="font-size:11px;color:var(--text);padding:9px 14px;border-bottom:1px solid var(--border)">'+(empresa||'<span style="color:var(--muted)">—</span>')+'</td>'
+      +'<td style="font-size:11px;font-family:var(--mono);color:'+(precio?'var(--accent)':'var(--muted)')+';padding:9px 14px;border-bottom:1px solid var(--border)">'+(precio||'—')+'</td>'
+      +'</tr>';
+  }
+
+  var thStyle='text-align:left;padding:7px 14px;font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap';
+  var thead='<thead><tr>'
+    +'<th style="'+thStyle+'">Palco</th>'
+    +'<th style="'+thStyle+'">Área</th>'
+    +'<th style="'+thStyle+'">Cap.</th>'
+    +'<th style="'+thStyle+'">Estado</th>'
+    +'<th style="'+thStyle+'">Empresa</th>'
+    +'<th style="'+thStyle+'">Precio</th>'
+    +'</tr></thead>';
+
+  var leftRows=leftPalcos.map(row).join('');
+  var rightRows=rightPalcos.map(row).join('');
+
+  var colHdr='padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)';
+
+  var tables='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">'
+    +'<div class="card" style="padding:0;overflow:hidden">'
+    +'<div style="'+colHdr+'">◀ &nbsp;LADO IZQUIERDO</div>'
+    +'<table style="width:100%;border-collapse:collapse">'+thead+'<tbody>'+leftRows+'</tbody></table>'
+    +'</div>'
+    +'<div class="card" style="padding:0;overflow:hidden">'
+    +'<div style="'+colHdr+'">LADO DERECHO &nbsp;▶</div>'
+    +'<table style="width:100%;border-collapse:collapse">'+thead+'<tbody>'+rightRows+'</tbody></table>'
+    +'</div>'
+    +'</div>';
+
+  var floorPlan=imgSrc
+    ?'<div class="card" style="padding:0;overflow:hidden"><img src="'+imgSrc+'" alt="Plano '+venue+' '+nivel+'" style="width:100%;display:block"/></div>'
+    :'<div class="card" style="padding:20px 24px;text-align:center;color:var(--muted);font-size:12px">Plano no disponible para este venue / nivel.</div>';
+
+  return tables+floorPlan;
 }
 
 function buildArenaSVG(venue,leftPalcos,rightPalcos){
-  const W=720,H=482;
-  const pW=112,pH=36,pGap=4,lH=52;
-  const xL=10,xR=W-xL-pW;
-  const startY=16;
-  let lsvg='',rsvg='',y;
-  y=startY;
-  leftPalcos.forEach(function(p){
-    const h=p.tipo==='lounge'?lH:pH;
-    lsvg+=buildPalcoRect(p,xL,y,pW,h,venue);
-    y+=h+pGap;
-  });
-  y=startY;
-  rightPalcos.forEach(function(p){
-    rsvg+=buildPalcoRect(p,xR,y,pW,pH,venue);
-    y+=pH+pGap;
-  });
-  const cx=W/2,cy=232,rx=193,ry=172;
-  const vname={CBA:'ARENA CÓRDOBA',ROS:'ARENA ROSARIO',MH:'PALERMO MUSIC HALL'}[venue]||venue;
-  const vcap={CBA:'12.000 cap.',ROS:'10.000 cap.',MH:'15.000 cap.'}[venue]||'';
-  const stageW=150,stageH=44,stageX=cx-75,stageY=cy+ry-56;
-  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;">'
-    +'<style>.ph{cursor:pointer;opacity:.85;transition:opacity .1s,filter .1s;}.ph:hover{opacity:1;filter:brightness(1.12);}</style>'
-    +'<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="var(--surface2)" stroke="var(--border)" stroke-width="1.5"/>'
-    +'<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(rx-30)+'" ry="'+(ry-30)+'" fill="none" stroke="var(--border)" stroke-width="0.7" stroke-dasharray="3,4" opacity="0.5"/>'
-    +'<text x="'+cx+'" y="'+(cy-8)+'" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="Inter,sans-serif" letter-spacing="2">'+vname+'</text>'
-    +'<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Inter,sans-serif">'+vcap+'</text>'
-    +'<rect x="'+stageX+'" y="'+stageY+'" width="'+stageW+'" height="'+stageH+'" rx="6" fill="rgba(255,114,72,0.1)" stroke="var(--accent)" stroke-width="1.5"/>'
-    +'<text x="'+cx+'" y="'+(stageY+stageH/2+4)+'" text-anchor="middle" fill="var(--accent)" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="2">ESCENARIO</text>'
-    +lsvg+rsvg
-    +'</svg>';
-}
+  /* Arena floor plan: palcos as arc-segments around ellipse (clockwise-from-north angles) */
+  var W=720, H=560, cx=360, cy=268;
+  var RI={x:178,y:142};              /* inner arena floor */
+  var RPxi=198,RPyi=160,RPxo=268,RPyo=218; /* palco ring inner/outer */
+  var RO={x:320,y:256};              /* outer stadium wall */
+  var D2R=Math.PI/180;
+  function ex(deg,rx){return cx+rx*Math.sin(deg*D2R);}
+  function ey(deg,ry){return cy-ry*Math.cos(deg*D2R);}
+  function pt(deg,rx,ry){return ex(deg,rx).toFixed(1)+','+ey(deg,ry).toFixed(1);}
+  function poly4(ang,half,xi,yi,xo,yo){
+    return pt(ang-half,xi,yi)+' '+pt(ang+half,xi,yi)+' '+pt(ang+half,xo,yo)+' '+pt(ang-half,xo,yo);
+  }
+  function midXY(ang,x1,y1,x2,y2){return {x:ex(ang,(x1+x2)/2),y:ey(ang,(y1+y2)/2)};}
+  function sectorPath(xi,yi,xo,yo,a1,a2){
+    var d='M'+pt(a1,xi,yi)+' ';
+    for(var i=1;i<=12;i++) d+='L'+pt(a1+(a2-a1)*i/12,xi,yi)+' ';
+    d+='L'+pt(a2,xo,yo)+' ';
+    for(var i=1;i<=12;i++) d+='L'+pt(a2+(a1-a2)*i/12,xo,yo)+' ';
+    return d+'Z';
+  }
 
-function buildPalcoRect(p,x,y,w,h,venue){
-  const e=getPalcoEntry(venue,p.id);
-  const status=e.status||'disponible';
-  const fill=PALCO_STATUS_FILL[status]||'#22C55E';
-  const isLounge=p.tipo==='lounge';
-  const label=p.label||p.id;
-  const sub=isLounge?p.aforo+' personas':(p.aforo+'p · '+(p.area||''));
-  const empText=e.empresa&&e.empresa.length>0
-    ?'<text x="'+(x+w/2)+'" y="'+(y+h-5)+'" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="8" font-family="Inter,sans-serif">'+e.empresa.substring(0,14)+'</text>'
-    :'';
-  const opac=status==='disponible'?'0.72':'1';
-  return '<g class="ph" onclick="openPalcoModal(\''+p.id+'\',\''+venue+'\')" opacity="'+opac+'">'
-    +'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="5" fill="'+fill+'"/>'
-    +'<text x="'+(x+w/2)+'" y="'+(y+(isLounge?17:13))+'" text-anchor="middle" fill="#fff" font-size="'+(isLounge?11:9.5)+'" font-family="Inter,sans-serif" font-weight="700">'+label+'</text>'
-    +'<text x="'+(x+w/2)+'" y="'+(y+(isLounge?31:24))+'" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8.5" font-family="Inter,sans-serif">'+sub+'</text>'
-    +empText
-    +'</g>';
+  var vname={CBA:'ARENA CÓRDOBA',ROS:'ARENA ROSARIO',MH:'PALERMO MUSIC HALL'}[venue]||venue;
+  var vcap={CBA:'12.000 espectadores',ROS:'10.000 espectadores',MH:'15.000 espectadores'}[venue]||'';
+
+  /* Seating rings (visual texture) */
+  var rings='';
+  for(var i=1;i<=3;i++){
+    var t=i/3.6;
+    rings+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(RI.x+t*(RPxi-RI.x)).toFixed(1)+'" ry="'+(RI.y+t*(RPyi-RI.y)).toFixed(1)+'" fill="none" stroke="var(--border)" stroke-width="0.8" opacity="0.28"/>';
+  }
+
+  /* Stage sector 153°→207° (bottom) */
+  var SA=153, SB=207;
+  var stPath=sectorPath(RI.x,RI.y,RO.x,RO.y,SA,SB);
+  var sm=midXY(180,RI.x,RI.y,RO.x,RO.y);
+
+  /* Angular layout:
+     Left  (10 items): i=0 → L-101 at 330° (back-top-left); i=9 → P-101 at 212° (near stage)
+     Right  (9 items): i=0 → P-110 at  30° (back-top-right); i=8 → P-118 at 148° (near stage) */
+  var LC=leftPalcos.length, RC=rightPalcos.length;
+  var LA=330, LB=212, LS=LC>1?(LB-LA)/(LC-1):0, LH=Math.abs(LS)/2-0.9;
+  var RA_A=30, RB_A=148, RS=RC>1?(RB_A-RA_A)/(RC-1):0, RH=RS/2-0.9;
+
+  var pSvg='';
+  function drawPalco(p,ang,half,xi,yi,xo,yo){
+    var e=getPalcoEntry(venue,p.id);
+    var st=e.status||'disponible';
+    var fill=PALCO_STATUS_FILL[st]||'#22C55E';
+    var op=st==='disponible'?'0.72':'1';
+    var pts=poly4(ang,half,xi,yi,xo,yo);
+    var m=midXY(ang,xi,yi,xo,yo);
+    var mx=m.x.toFixed(1),my=m.y.toFixed(1);
+    var lbl=p.label||p.id;
+    var isL=p.tipo==='lounge';
+    var emp=e.empresa?e.empresa.substring(0,13):'';
+    var empLine=emp?'<text x="'+mx+'" y="'+(m.y+7).toFixed(1)+'" text-anchor="middle" fill="rgba(255,255,255,0.62)" font-size="6" font-family="Inter,sans-serif">'+emp+'</text>':'';
+    pSvg+='<g class="ph" onclick="openPalcoModal(\''+p.id+'\',\''+venue+'\')" opacity="'+op+'">'
+      +'<polygon points="'+pts+'" fill="'+fill+'" stroke="rgba(0,0,0,0.22)" stroke-width="0.8"/>'
+      +'<text x="'+mx+'" y="'+(m.y-2).toFixed(1)+'" text-anchor="middle" fill="#fff" font-size="'+(isL?9:7.5)+'" font-family="Inter,sans-serif" font-weight="700">'+lbl+'</text>'
+      +empLine+'</g>';
+  }
+
+  leftPalcos.forEach(function(p,i){
+    var ang=LA+i*LS;
+    var isL=p.tipo==='lounge';
+    var xi=isL?RPxi-2:RPxi, yi=isL?RPyi-2:RPyi;
+    var xo=isL?RPxo+16:RPxo, yo=isL?RPyo+14:RPyo;
+    var half=isL?LH*1.35:LH;
+    drawPalco(p,ang,half,xi,yi,xo,yo);
+  });
+  rightPalcos.forEach(function(p,i){
+    drawPalco(p,RA_A+i*RS,RH,RPxi,RPyi,RPxo,RPyo);
+  });
+
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">'
+    +'<style>.ph{cursor:pointer;transition:opacity .1s;}.ph:hover{opacity:1!important;}.ph polygon{transition:filter .1s;}.ph:hover polygon{filter:brightness(1.18);}</style>'
+    +'<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+RO.x+'" ry="'+RO.y+'" fill="var(--surface2)" stroke="var(--border)" stroke-width="2"/>'
+    +'<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(RPxi-5)+'" ry="'+(RPyi-5)+'" fill="rgba(18,15,10,0.62)"/>'
+    +rings
+    +'<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+RI.x+'" ry="'+RI.y+'" fill="var(--bg)" stroke="var(--border)" stroke-width="1.5"/>'
+    +'<text x="'+cx+'" y="'+(cy-11)+'" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="Inter,sans-serif" letter-spacing="2">'+vname+'</text>'
+    +'<text x="'+cx+'" y="'+(cy+8)+'" text-anchor="middle" fill="var(--muted)" font-size="9" font-family="Inter,sans-serif">'+vcap+'</text>'
+    +'<path d="'+stPath+'" fill="rgba(255,114,72,0.1)" stroke="var(--accent)" stroke-width="1.5" stroke-linejoin="round"/>'
+    +'<text x="'+sm.x.toFixed(1)+'" y="'+sm.y.toFixed(1)+'" text-anchor="middle" dominant-baseline="middle" fill="var(--accent)" font-size="10.5" font-family="Inter,sans-serif" font-weight="700" letter-spacing="2">ESCENARIO</text>'
+    +pSvg+'</svg>';
 }
 
 function openPalcoModal(id,venue){
