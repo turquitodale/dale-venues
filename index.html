@@ -552,7 +552,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
 // CONFIG
 // ═══════════════════════════
 // FUENTE ÚNICA DE DATOS — reemplazar con el ID del Google Sheet de Pipeline v2
-const PIPELINE_SHEET_ID = '15aTiW46aXH90vWgRiwj9Nlh5WYptqBaY'; // ← único ID necesario
+const PIPELINE_SHEET_ID = 'TU_PIPELINE_SHEET_ID'; // ← único ID necesario
 const VENUE_MAP = {
   'Arena Córdoba':'CBA','Arena Cordoba':'CBA',
   'Arena Rosario':'ROS',
@@ -1301,7 +1301,7 @@ function renderVenueDetail(code){
   renderCommentsVenue(code);
 }
 /* ── REPOSITORIO ─────────────────────────────────────────── */
-var DECKS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLEV5S4eq61_TwxV9mK9392tezosJXT72ar6kZz5R-NbCZCZ60mUAyuUINrjmhnpHX/exec'; // Pegar URL del Apps Script deployment aquí
+var DECKS_SCRIPT_URL = ''; // Pegar URL del Apps Script deployment aquí
 var repoData = [];
 var repoFiltro = 'todos';
 
@@ -1316,16 +1316,26 @@ function renderRepositorioTab(){
     return;
   }
   grid.innerHTML = '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted);font-size:13px">Cargando archivos...</div>';
-  fetch(DECKS_SCRIPT_URL)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(!data.ok) throw new Error(data.error||'Error');
-      repoData = data.archivos;
-      renderRepoGrid();
-    })
-    .catch(function(err){
-      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error cargando archivos: '+err.message+'</div>';
-    });
+  /* JSONP para evitar CORS con Apps Script */
+  var cbName = '__dpRepo' + Date.now();
+  window[cbName] = function(data){
+    delete window[cbName];
+    var old = document.getElementById('__dpRepoScript');
+    if(old) old.parentNode.removeChild(old);
+    if(!data.ok){
+      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error: '+(data.error||'sin respuesta')+'</div>';
+      return;
+    }
+    repoData = data.archivos;
+    renderRepoGrid();
+  };
+  var s = document.createElement('script');
+  s.id = '__dpRepoScript';
+  s.onerror = function(){
+    grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error al cargar. Verificá que el Apps Script esté publicado como público.</div>';
+  };
+  s.src = DECKS_SCRIPT_URL + (DECKS_SCRIPT_URL.indexOf('?')>-1?'&':'?') + 'callback=' + cbName;
+  document.head.appendChild(s);
 }
 
 function filterRepo(tipo, btn){
@@ -1600,7 +1610,7 @@ window.applyTheme = function(light){
   }
 };
 /* ── REPOSITORIO ─────────────────────────────────────────── */
-var DECKS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLEV5S4eq61_TwxV9mK9392tezosJXT72ar6kZz5R-NbCZCZ60mUAyuUINrjmhnpHX/exec'; // Pegar URL del Apps Script deployment aquí
+var DECKS_SCRIPT_URL = ''; // Pegar URL del Apps Script deployment aquí
 var repoData = [];
 var repoFiltro = 'todos';
 
@@ -1615,16 +1625,26 @@ function renderRepositorioTab(){
     return;
   }
   grid.innerHTML = '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted);font-size:13px">Cargando archivos...</div>';
-  fetch(DECKS_SCRIPT_URL)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(!data.ok) throw new Error(data.error||'Error');
-      repoData = data.archivos;
-      renderRepoGrid();
-    })
-    .catch(function(err){
-      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error cargando archivos: '+err.message+'</div>';
-    });
+  /* JSONP para evitar CORS con Apps Script */
+  var cbName = '__dpRepo' + Date.now();
+  window[cbName] = function(data){
+    delete window[cbName];
+    var old = document.getElementById('__dpRepoScript');
+    if(old) old.parentNode.removeChild(old);
+    if(!data.ok){
+      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error: '+(data.error||'sin respuesta')+'</div>';
+      return;
+    }
+    repoData = data.archivos;
+    renderRepoGrid();
+  };
+  var s = document.createElement('script');
+  s.id = '__dpRepoScript';
+  s.onerror = function(){
+    grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error al cargar. Verificá que el Apps Script esté publicado como público.</div>';
+  };
+  s.src = DECKS_SCRIPT_URL + (DECKS_SCRIPT_URL.indexOf('?')>-1?'&':'?') + 'callback=' + cbName;
+  document.head.appendChild(s);
 }
 
 function filterRepo(tipo, btn){
@@ -2047,7 +2067,7 @@ function switchPalcoNivel(n,btn){
   renderPalcosTab();
 }
 /* ── REPOSITORIO ─────────────────────────────────────────── */
-var DECKS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLEV5S4eq61_TwxV9mK9392tezosJXT72ar6kZz5R-NbCZCZ60mUAyuUINrjmhnpHX/exec'; // Pegar URL del Apps Script deployment aquí
+var DECKS_SCRIPT_URL = ''; // Pegar URL del Apps Script deployment aquí
 var repoData = [];
 var repoFiltro = 'todos';
 
@@ -2062,16 +2082,26 @@ function renderRepositorioTab(){
     return;
   }
   grid.innerHTML = '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted);font-size:13px">Cargando archivos...</div>';
-  fetch(DECKS_SCRIPT_URL)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(!data.ok) throw new Error(data.error||'Error');
-      repoData = data.archivos;
-      renderRepoGrid();
-    })
-    .catch(function(err){
-      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error cargando archivos: '+err.message+'</div>';
-    });
+  /* JSONP para evitar CORS con Apps Script */
+  var cbName = '__dpRepo' + Date.now();
+  window[cbName] = function(data){
+    delete window[cbName];
+    var old = document.getElementById('__dpRepoScript');
+    if(old) old.parentNode.removeChild(old);
+    if(!data.ok){
+      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error: '+(data.error||'sin respuesta')+'</div>';
+      return;
+    }
+    repoData = data.archivos;
+    renderRepoGrid();
+  };
+  var s = document.createElement('script');
+  s.id = '__dpRepoScript';
+  s.onerror = function(){
+    grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error al cargar. Verificá que el Apps Script esté publicado como público.</div>';
+  };
+  s.src = DECKS_SCRIPT_URL + (DECKS_SCRIPT_URL.indexOf('?')>-1?'&':'?') + 'callback=' + cbName;
+  document.head.appendChild(s);
 }
 
 function filterRepo(tipo, btn){
