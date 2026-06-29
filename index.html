@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>dale.venues</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,700;1,9..144,800&family=DM+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -226,6 +227,28 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
 .btn{padding:8px 15px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all 0.15s;}
 .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .btn-ghost:hover{border-color:var(--pulse);}
+
+/* ─── MAP VIEW ────────────────────────────────────────────── */
+#venue-map{height:520px;width:100%;border-radius:0 0 11px 11px;}
+.leaflet-popup-content-wrapper{background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;color:var(--text)!important;padding:0!important;}
+.leaflet-popup-content{margin:0!important;padding:14px 16px!important;}
+.leaflet-popup-tip-container .leaflet-popup-tip{background:var(--surface)!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;top:8px!important;right:10px!important;}
+.leaflet-bar a,.leaflet-bar a:hover{background:var(--surface)!important;border-color:var(--border)!important;color:var(--text)!important;}
+.leaflet-bar a:hover{background:var(--surface2)!important;}
+.leaflet-control-attribution{background:rgba(0,0,0,0.4)!important;color:var(--muted)!important;font-size:9px!important;}
+.leaflet-control-attribution a{color:var(--muted)!important;}
+.map-popup-dale{display:inline-block;background:rgba(255,114,72,0.15);color:var(--accent);font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:6px;letter-spacing:0.5px;}
+.map-popup-name{font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:3px;line-height:1.2;}
+.map-popup-type{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.map-popup-cap{font-size:11px;color:var(--secondary);line-height:1.5;}
+.mapa-venue-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:16px;}
+.mapa-venue-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;cursor:pointer;transition:border-color 0.15s,transform 0.12s;}
+.mapa-venue-card:hover{border-color:var(--accent);transform:translateY(-1px);}
+.mapa-venue-card.dale-play{border-color:rgba(255,114,72,0.35);}
+.mapa-venue-name{font-size:12px;font-weight:600;margin-bottom:3px;}
+.mapa-venue-meta{font-size:11px;color:var(--muted);}
+.mapa-venue-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:3px;margin-top:5px;font-weight:500;}
 @media(max-width:900px){
   .topbar{display:flex;}
   .shell{flex-direction:column;height:100vh;}
@@ -276,6 +299,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
     <button class="nav-item" onclick="nav('comercial')"><span class="icon">&#11050;</span>Comercial</button>
     <button class="nav-item" onclick="nav('tareas')"><span class="icon">&#9723;</span>Tareas</button>
     <button class="nav-item" onclick="nav('calendario')"><span class="icon">&#9711;</span>Calendario</button>
+    <button class="nav-item" onclick="nav('mapa')"><span class="icon">&#9678;</span>Mapa</button>
     <div class="sidebar-section" style="margin-top:8px;">Venues</div>
     <button class="nav-item" onclick="showVenueDetail('MH')"><span class="vdot" style="background:var(--accent)"></span>Palermo Music Hall</button>
     <button class="nav-item" onclick="showVenueDetail('CBA')"><span class="vdot" style="background:#059669"></span>Cordoba Arena</button>
@@ -415,6 +439,24 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
         <div id="agenda-body"></div>
       </div>
     </div>
+
+    <!-- MAPA -->
+    <div class="view" id="view-mapa">
+      <div class="page-header">
+        <div><div class="page-title">Mapa de Venues</div><div class="page-sub">Arena Córdoba · Arena Rosario · Palermo MH y competencia regional</div></div>
+      </div>
+      <div class="filter-row" id="mapa-filters">
+        <button class="filter-btn active" onclick="filterMapa('todos',this)">Todos</button>
+        <button class="filter-btn" onclick="filterMapa('dale',this)">● Dale Play</button>
+        <button class="filter-btn" onclick="filterMapa('CBA',this)">Córdoba</button>
+        <button class="filter-btn" onclick="filterMapa('ROS',this)">Rosario</button>
+        <button class="filter-btn" onclick="filterMapa('MH',this)">Buenos Aires</button>
+      </div>
+      <div class="card" style="overflow:hidden;padding:0;margin-bottom:16px;">
+        <div id="venue-map"></div>
+      </div>
+      <div class="mapa-venue-row" id="mapa-venue-cards"></div>
+    </div>
     <!-- VENUE DETAIL -->
     <div class="view" id="view-venue-detail">
       <button class="back-btn" onclick="nav('overview')">&larr; Volver al Overview</button>
@@ -497,11 +539,12 @@ function nav(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
-  const map={overview:0,comercial:1,tareas:2,calendario:3};
+  const map={overview:0,comercial:1,tareas:2,calendario:3,mapa:4};
   const btns=document.querySelectorAll('.nav-item');
   if(map[name]!==undefined) btns[map[name]].classList.add('active');
   closeSidebar();
   if(name==='calendario') renderAgenda();
+  if(name==='mapa') initMapView();
 }
 function showVenueDetail(code){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -1173,5 +1216,234 @@ function renderVenueDetail(code){
   renderCommentsVenue(code);
 }
 </script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+// ═══════════════════════════
+// MAPA DE VENUES
+// ═══════════════════════════
+const VENUES_MAP_DATA = [
+  // ── Dale Play ──────────────────────────────────────────────────────────────
+  {
+    name:'Arena Córdoba', city:'CBA', dale:true,
+    type:'Arena indoor internacional · En desarrollo',
+    address:'Distrito Las Artes / ex Batallón 141, Córdoba',
+    capacity:'~12.000 espectadores · 36 palcos VIP · 2 lounges corporativos',
+    lat:-31.4317, lng:-64.1762, approx:true,
+    note:'Proyecto impulsado por Dale Play, Corporación América Inmobiliaria y socios.'
+  },
+  {
+    name:'Arena Rosario', city:'ROS', dale:true,
+    type:'Arena indoor · En desarrollo',
+    address:'Rosario, Santa Fe',
+    capacity:'~10.000 espectadores',
+    lat:-32.9350, lng:-60.6480, approx:true,
+    note:'Proyecto Dale Play en desarrollo para la plaza rosarina.'
+  },
+  {
+    name:'Palermo Music Hall', city:'MH', dale:true,
+    type:'Music hall indoor · En desarrollo',
+    address:'Palermo, Buenos Aires',
+    capacity:'~15.000 espectadores',
+    lat:-34.5850, lng:-58.4260, approx:true,
+    note:'Proyecto Dale Play en Buenos Aires.'
+  },
+  // ── Córdoba competencia ────────────────────────────────────────────────────
+  {
+    name:'Estadio Mario Alberto Kempes', city:'CBA', dale:false,
+    type:'Estadio / grandes conciertos',
+    address:'Av. Cárcano s/n, Chateau Carreras, Córdoba',
+    capacity:'+57.000 espectadores · formato outdoor/estadio',
+    lat:-31.3689, lng:-64.2463
+  },
+  {
+    name:'Quality Arena / Quality Center', city:'CBA', dale:false,
+    type:'Indoor multiformato · operador activo',
+    address:'Av. Cruz Roja Argentina 200, Ciudad Universitaria, Córdoba',
+    capacity:'7.500 de pie · 4.200 plateas numeradas · 6.400 mixto (Quality Arena)',
+    lat:-31.4371, lng:-64.1884
+  },
+  {
+    name:'Plaza de la Música', city:'CBA', dale:false,
+    type:'Venue musical indoor · fuerte identidad rock/pop argentino',
+    address:'Costanera esquina Mendoza, Córdoba',
+    capacity:'6.100 show · 2.603 auditorio · 2.303 tribuna',
+    lat:-31.4099, lng:-64.1976
+  },
+  {
+    name:'Forja Centro de Eventos', city:'CBA', dale:false,
+    type:'Multiespacio / nave adaptable',
+    address:'Mauricio Yadarola 1699, Córdoba',
+    capacity:'10.000 personas · predio 10 hectáreas',
+    lat:-31.3931, lng:-64.1596
+  },
+  // ── Rosario competencia ────────────────────────────────────────────────────
+  {
+    name:'La Segunda Seguros Arena', city:'ROS', dale:false,
+    type:'Arena indoor mediana · naming rights activo',
+    address:'Av. Córdoba 3475 / Cafferata, junto al Mercado del Patio, Rosario',
+    capacity:'~3.200 de pie · ~1.200 sentados · +500.000 personas/año',
+    lat:-32.9388, lng:-60.6709
+  },
+  {
+    name:'Metropolitano Rosario', city:'ROS', dale:false,
+    type:'Centro de convenciones / shows',
+    address:'Junín 501, Alto Rosario Shopping, Rosario',
+    capacity:'Salón Independencia: 950 auditorio · 950 recepción · 547 banquete',
+    lat:-32.9281, lng:-60.6644
+  },
+  {
+    name:'Anfiteatro Municipal Humberto de Nito', city:'ROS', dale:false,
+    type:'Outdoor cultural / música al aire libre',
+    address:'Parque Urquiza, sobre el río Paraná, Rosario',
+    capacity:'~3.000 espectadores',
+    lat:-32.9600, lng:-60.6249
+  },
+  {
+    name:'Teatro Broadway Rosario', city:'ROS', dale:false,
+    type:'Teatro comercial · cartelera activa',
+    address:'Entre Ríos 444, Rosario',
+    capacity:'Teatro de cartelera variada: teatro, música, comedia, familiar',
+    lat:-32.9433, lng:-60.6433
+  },
+  {
+    name:'Teatro El Círculo', city:'ROS', dale:false,
+    type:'Teatro patrimonial / sala italiana',
+    address:'Laprida 1223, Rosario',
+    capacity:'~1.550 personas · formato sala italiana',
+    lat:-32.9514, lng:-60.6389
+  },
+  {
+    name:'Plataforma Lavardén', city:'ROS', dale:false,
+    type:'Centro cultural público / multiformato',
+    address:'Mendoza 1085, Rosario',
+    capacity:'Teatro, gran salón, programación pública gratuita',
+    lat:-32.9474, lng:-60.6418
+  }
+];
+
+let venueMap = null;
+let tileLayer = null;
+let venueMarkers = [];
+let currentMapFilter = 'todos';
+let mapInitialized = false;
+
+function getMapTiles(){
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  return isLight
+    ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+}
+
+function markerIcon(v){
+  if(v.dale){
+    return L.divIcon({
+      className:'',
+      html:`<div style="width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 0 0 3px rgba(255,114,72,0.3),0 3px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;font-family:sans-serif;">D</div>`,
+      iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-12]
+    });
+  }
+  const clr = v.city==='CBA' ? 'var(--cor)' : v.city==='ROS' ? 'var(--ros)' : '#888';
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:13px;height:13px;border-radius:50%;background:${clr};border:2px solid rgba(255,255,255,0.6);box-shadow:0 2px 6px rgba(0,0,0,0.45);"></div>`,
+    iconSize:[13,13], iconAnchor:[6,6], popupAnchor:[0,-8]
+  });
+}
+
+function popupHtml(v){
+  const daleTag = v.dale ? '<div class="map-popup-dale">● DALE PLAY</div>' : '';
+  const approxNote = v.approx ? '<div style="font-size:10px;color:var(--muted);margin-top:6px;font-style:italic;">📍 Ubicación aproximada · en desarrollo</div>' : '';
+  return `<div>${daleTag}<div class="map-popup-name">${v.name}</div><div class="map-popup-type">${v.type}</div><div class="map-popup-cap">${v.capacity}${approxNote}</div></div>`;
+}
+
+function initMapView(){
+  if(mapInitialized){
+    setTimeout(()=>{ if(venueMap) venueMap.invalidateSize(); }, 100);
+    return;
+  }
+  mapInitialized = true;
+  venueMap = L.map('venue-map', { zoomControl:true, scrollWheelZoom:true });
+  tileLayer = L.tileLayer(getMapTiles(), {
+    maxZoom:19,
+    attribution:'&copy; <a href="https://carto.com">CARTO</a> &copy; <a href="https://openstreetmap.org">OSM</a>'
+  }).addTo(venueMap);
+  VENUES_MAP_DATA.forEach(v=>{
+    const m = L.marker([v.lat, v.lng], { icon: markerIcon(v), title: v.name })
+      .bindPopup(popupHtml(v), { maxWidth:280, minWidth:220 });
+    m._venueData = v;
+    m.addTo(venueMap);
+    venueMarkers.push(m);
+  });
+  fitMapBounds('todos');
+  renderMapCards('todos');
+  setTimeout(()=>venueMap.invalidateSize(), 200);
+}
+
+function fitMapBounds(filter){
+  if(!venueMap) return;
+  const visible = VENUES_MAP_DATA.filter(v=>matchMapFilter(v,filter));
+  if(!visible.length) return;
+  const bounds = L.latLngBounds(visible.map(v=>[v.lat,v.lng]));
+  venueMap.fitBounds(bounds.pad(0.15));
+}
+
+function matchMapFilter(v, filter){
+  if(filter==='todos') return true;
+  if(filter==='dale') return v.dale;
+  return v.city === filter;
+}
+
+function filterMapa(f, btn){
+  document.querySelectorAll('#mapa-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMapFilter = f;
+  venueMarkers.forEach(m=>{
+    const v = m._venueData;
+    if(matchMapFilter(v, f)) m.addTo(venueMap);
+    else venueMap.removeLayer(m);
+  });
+  fitMapBounds(f);
+  renderMapCards(f);
+}
+
+function renderMapCards(filter){
+  const venues = VENUES_MAP_DATA.filter(v=>matchMapFilter(v,filter));
+  const dale = venues.filter(v=>v.dale);
+  const comp = venues.filter(v=>!v.dale);
+  const cityColor = {CBA:'var(--cor)', ROS:'var(--ros)', MH:'var(--mh)'};
+  const cityLabel = {CBA:'Córdoba', ROS:'Rosario', MH:'Buenos Aires'};
+  function card(v){
+    const color = v.dale ? 'var(--accent)' : cityColor[v.city]||'var(--muted)';
+    const label = v.dale ? 'Dale Play' : cityLabel[v.city]||v.city;
+    return `<div class="mapa-venue-card${v.dale?' dale-play':''}" onclick="flyToVenue('${v.name}')">
+      <div class="mapa-venue-name">${v.name}</div>
+      <div class="mapa-venue-meta">${v.type.split('·')[0].trim()}</div>
+      <span class="mapa-venue-tag" style="background:${color}22;color:${color}">${label}${v.approx?' · En desarrollo':''}</span>
+    </div>`;
+  }
+  document.getElementById('mapa-venue-cards').innerHTML = [...dale,...comp].map(card).join('');
+}
+
+function flyToVenue(name){
+  const v = VENUES_MAP_DATA.find(x=>x.name===name);
+  if(!v||!venueMap) return;
+  venueMap.flyTo([v.lat, v.lng], 14, {animate:true, duration:0.8});
+  const m = venueMarkers.find(x=>x._venueData.name===name);
+  if(m) setTimeout(()=>m.openPopup(), 900);
+}
+
+// Update tiles when theme changes
+const _origToggleTheme = toggleTheme;
+// Patch applyTheme to also update map tiles
+const _origApplyTheme = applyTheme;
+window.applyTheme = function(light){
+  _origApplyTheme(light);
+  if(venueMap && tileLayer){
+    tileLayer.setUrl(getMapTiles());
+  }
+};
+</script>
+
 </body>
 </html>
