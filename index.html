@@ -16,6 +16,12 @@
   --mono:'DM Mono',monospace;
   --display:'Fraunces',Georgia,serif;
 }
+[data-theme="light"]{
+  --bg:#F7F3EC;--surface:#FFFDF8;--surface2:#F0EBE0;--border:#E2D9CC;
+  --accent:#FF7248;--pulse:#E85E35;--green:#16A34A;--yellow:#D97706;--red:#DC2626;
+  --text:#1C1814;--muted:#7C6F61;--secondary:#5C5047;
+  --mh:#FF7248;--cor:#059669;--ros:#D97706;
+}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;width:100%;}
 html{overflow-x:hidden;width:100%;}
 ::-webkit-scrollbar{display:none;}
@@ -49,6 +55,14 @@ html{overflow-x:hidden;width:100%;}
 .sidebar-bottom{margin-top:auto;padding:14px 12px;border-top:1px solid var(--border);}
 .sync-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.theme-toggle{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:6px 8px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);}
+.theme-toggle-label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.theme-switch{position:relative;width:32px;height:18px;flex-shrink:0;}
+.theme-switch input{opacity:0;width:0;height:0;}
+.theme-slider{position:absolute;inset:0;background:var(--border);border-radius:18px;cursor:pointer;transition:background 0.2s;}
+.theme-slider:before{content:'';position:absolute;width:12px;height:12px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:transform 0.2s,background 0.2s;}
+input:checked+.theme-slider{background:var(--accent);}
+input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:290;}
 .main{flex:1;overflow-y:auto;padding:28px 32px;min-width:0;}
 .view{display:none;}
@@ -268,6 +282,13 @@ html{overflow-x:hidden;width:100%;}
     <button class="nav-item" onclick="showVenueDetail('ROS')"><span class="vdot" style="background:#D97706"></span>Arena Rosario</button>
     <div class="sidebar-bottom">
       <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Cargando...</span></div>
+      <div class="theme-toggle">
+        <span class="theme-toggle-label" id="theme-icon">🌙 Modo oscuro</span>
+        <label class="theme-switch">
+          <input type="checkbox" id="theme-chk" onchange="toggleTheme()">
+          <span class="theme-slider"></span>
+        </label>
+      </div>
     </div>
   </aside>
   <main class="main">
@@ -406,8 +427,8 @@ html{overflow-x:hidden;width:100%;}
 // ═══════════════════════════
 // CONFIG
 // ═══════════════════════════
-const SHEET_ID       = '15aTiW46aXH90vWgRiwj9Nlh5WYptqBaY';
-const PIPELINE_SHEET_ID = '15aTiW46aXH90vWgRiwj9Nlh5WYptqBaY'; // ← Reemplazar con el ID del Google Sheet de Pipeline v2
+// FUENTE ÚNICA DE DATOS — reemplazar con el ID del Google Sheet de Pipeline v2
+const PIPELINE_SHEET_ID = '15aTiW46aXH90vWgRiwj9Nlh5WYptqBaY'; // ← único ID necesario
 const VENUE_MAP = {
   'Arena Córdoba':'CBA','Arena Cordoba':'CBA',
   'Arena Rosario':'ROS',
@@ -424,6 +445,25 @@ let GCAL_EVENTS = [];
 let pieCharts = {};
 let agendaView = 'week';
 let agendaAnchor = new Date();
+// ═══════════════════════════
+// THEME
+// ═══════════════════════════
+function applyTheme(light){
+  document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+  const chk = document.getElementById('theme-chk');
+  const lbl = document.getElementById('theme-icon');
+  if(chk) chk.checked = light;
+  if(lbl) lbl.textContent = light ? '☀️ Modo claro' : '🌙 Modo oscuro';
+}
+function toggleTheme(){
+  const isLight = document.getElementById('theme-chk').checked;
+  localStorage.setItem('dp-theme', isLight ? 'light' : 'dark');
+  applyTheme(isLight);
+}
+(function initTheme(){
+  const saved = localStorage.getItem('dp-theme');
+  if(saved === 'light') applyTheme(true);
+})();
 // ═══════════════════════════
 // LOGIN
 // ═══════════════════════════
@@ -473,7 +513,7 @@ function showVenueDetail(code){
 // FETCH SHEETS
 // ═══════════════════════════
 async function fetchSheet(tab){
-  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
+  const url=`https://docs.google.com/spreadsheets/d/${PIPELINE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
   const res=await fetch(url);
   const text=await res.text();
   const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
