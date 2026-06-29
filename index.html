@@ -249,6 +249,9 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
 .mapa-venue-name{font-size:12px;font-weight:600;margin-bottom:3px;}
 .mapa-venue-meta{font-size:11px;color:var(--muted);}
 .mapa-venue-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:3px;margin-top:5px;font-weight:500;}
+/* ─── PALCOS VIEW ─────────────────────────────────────── */
+.palco-arena-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.palco-arena-wrap svg{display:block;}
 @media(max-width:900px){
   .topbar{display:flex;}
   .shell{flex-direction:column;height:100vh;}
@@ -300,6 +303,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
     <button class="nav-item" onclick="nav('tareas')"><span class="icon">&#9723;</span>Tareas</button>
     <button class="nav-item" onclick="nav('calendario')"><span class="icon">&#9711;</span>Calendario</button>
     <button class="nav-item" onclick="nav('mapa')"><span class="icon">&#9678;</span>Mapa</button>
+    <button class="nav-item" onclick="nav('palcos')"><span class="icon">&#9670;</span>Palcos VIP</button>
     <div class="sidebar-section" style="margin-top:8px;">Venues</div>
     <button class="nav-item" onclick="showVenueDetail('MH')"><span class="vdot" style="background:var(--accent)"></span>Palermo Music Hall</button>
     <button class="nav-item" onclick="showVenueDetail('CBA')"><span class="vdot" style="background:#059669"></span>Cordoba Arena</button>
@@ -335,6 +339,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
           <div class="card-header">Hitos Criticos <button class="card-action" onclick="nav('calendario')">Ver Calendario &rarr;</button></div>
           <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Hito</th><th>Venue</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="tbl-hitos-criticos"></tbody></table></div>
         </div>
+        <div id="palcos-overview-card" class="card" style="margin-bottom:16px;"></div>
         <div class="card">
           <div class="card-header">Comentarios del Proyecto <span class="card-sub" id="comments-overview-count"></span></div>
           <div class="tbl-wrap">
@@ -457,12 +462,73 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
       </div>
       <div class="mapa-venue-row" id="mapa-venue-cards"></div>
     </div>
+    <!-- PALCOS VIP -->
+    <div class="view" id="view-palcos">
+      <div class="page-header">
+        <div><div class="page-title">Palcos VIP</div><div class="page-sub">Gestión comercial de palcos · Arena Córdoba · Arena Rosario · Palermo MH</div></div>
+      </div>
+      <div class="kpi-row kpi-3" id="palcos-kpi-row" style="margin-bottom:20px;"></div>
+      <div class="filter-row" id="palcos-venue-filter" style="margin-bottom:10px;">
+        <button class="filter-btn active" onclick="switchPalcoVenue('CBA',this)">Arena Córdoba</button>
+        <button class="filter-btn" onclick="switchPalcoVenue('ROS',this)">Arena Rosario</button>
+        <button class="filter-btn" onclick="switchPalcoVenue('MH',this)">Palermo MH</button>
+      </div>
+      <div class="filter-row" id="palcos-nivel-filter" style="margin-bottom:10px;">
+        <button class="filter-btn active" onclick="switchPalcoNivel('N1',this)">Nivel 1 (P-1xx)</button>
+        <button class="filter-btn" onclick="switchPalcoNivel('N2',this)">Nivel 2 (P-2xx)</button>
+      </div>
+      <div style="display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#22C55E;display:inline-block;flex-shrink:0;"></span>Disponible</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#F59E0B;display:inline-block;flex-shrink:0;"></span>En Negociación</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#FF7248;display:inline-block;flex-shrink:0;"></span>Reservado</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#EF4444;display:inline-block;flex-shrink:0;"></span>Vendido</div>
+      </div>
+      <div class="card" style="padding:14px;" id="palco-map-container"></div>
+    </div>
     <!-- VENUE DETAIL -->
     <div class="view" id="view-venue-detail">
       <button class="back-btn" onclick="nav('overview')">&larr; Volver al Overview</button>
       <div id="venue-detail-content"></div>
     </div>
   </main>
+</div>
+<!-- PALCO MODAL -->
+<div id="palco-modal-overlay" onclick="if(event.target===this)closePalcoModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.68);z-index:9998;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;width:100%;max-width:370px;position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <div id="pm-title" style="font-family:var(--display);font-size:18px;font-weight:700;"></div>
+        <div id="pm-meta" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+      <button onclick="closePalcoModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;padding:0;line-height:1;">&#215;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Estado</label>
+        <select id="pm-status" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Inter',sans-serif;outline:none;">
+          <option value="disponible">Disponible</option>
+          <option value="negociacion">En Negociacion</option>
+          <option value="reservado">Reservado</option>
+          <option value="vendido">Vendido / Cerrado</option>
+        </select>
+      </div>
+      <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Empresa</label>
+        <input id="pm-empresa" type="text" placeholder="Nombre de la empresa" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Inter',sans-serif;outline:none;">
+      </div>
+      <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Precio de venta (USD)</label>
+        <input id="pm-precio" type="number" placeholder="0" min="0" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Inter',sans-serif;outline:none;">
+      </div>
+      <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Fecha</label>
+        <input id="pm-fecha" type="date" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Inter',sans-serif;outline:none;">
+      </div>
+      <div><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;">Notas</label>
+        <textarea id="pm-notas" placeholder="Notas adicionales..." style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 11px;font-size:12px;font-family:'Inter',sans-serif;outline:none;resize:none;height:56px;line-height:1.5;"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button onclick="closePalcoModal()" style="flex:1;background:var(--surface2);color:var(--secondary);border:1px solid var(--border);border-radius:7px;padding:9px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;">Cancelar</button>
+      <button onclick="savePalcoModal()" style="flex:2;background:var(--accent);color:#fff;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;">Guardar</button>
+    </div>
+  </div>
 </div>
 </div>
 <script>
@@ -539,12 +605,13 @@ function nav(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
-  const map={overview:0,comercial:1,tareas:2,calendario:3,mapa:4};
+  const map={overview:0,comercial:1,tareas:2,calendario:3,mapa:4,palcos:5};
   const btns=document.querySelectorAll('.nav-item');
   if(map[name]!==undefined) btns[map[name]].classList.add('active');
   closeSidebar();
   if(name==='calendario') renderAgenda();
   if(name==='mapa') initMapView();
+  if(name==='palcos') renderPalcosTab();
 }
 function showVenueDetail(code){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -833,6 +900,7 @@ function renderOverview(){
       }).join('')
     :`<tr><td class="tbl-empty" colspan="4">Sin hitos urgentes o en riesgo</td></tr>`;
   renderCommentsOverview();
+  renderPalcosOverviewCard();
 }
 // ═══════════════════════════
 // PIE CHARTS
@@ -1443,6 +1511,273 @@ window.applyTheme = function(light){
     tileLayer.setUrl(getMapTiles());
   }
 };
+</script>
+
+<script>
+// ═══════════════════════════
+// PALCOS VIP
+// ═══════════════════════════
+const PALCOS_DEF = {
+  CBA:{
+    N1:[
+      {id:'L-101',label:'Lounge 1',aforo:84,area:null,side:'left',tipo:'lounge'},
+      {id:'P-109',aforo:12,area:'31 m²',side:'left'},
+      {id:'P-108',aforo:10,area:'25 m²',side:'left'},
+      {id:'P-107',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-106',aforo:12,area:'31 m²',side:'left'},
+      {id:'P-105',aforo:12,area:'32 m²',side:'left'},
+      {id:'P-104',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-103',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-102',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-101',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-110',aforo:12,area:'31 m²',side:'right'},
+      {id:'P-111',aforo:10,area:'25 m²',side:'right'},
+      {id:'P-112',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-113',aforo:12,area:'31 m²',side:'right'},
+      {id:'P-114',aforo:12,area:'32 m²',side:'right'},
+      {id:'P-115',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-116',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-117',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-118',aforo:10,area:'24 m²',side:'right'}
+    ],
+    N2:[
+      {id:'L-201',label:'Lounge 2',aforo:84,area:null,side:'left',tipo:'lounge'},
+      {id:'P-209',aforo:12,area:'31 m²',side:'left'},
+      {id:'P-208',aforo:10,area:'25 m²',side:'left'},
+      {id:'P-207',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-206',aforo:12,area:'31 m²',side:'left'},
+      {id:'P-205',aforo:12,area:'32 m²',side:'left'},
+      {id:'P-204',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-203',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-202',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-201',aforo:10,area:'24 m²',side:'left'},
+      {id:'P-210',aforo:12,area:'31 m²',side:'right'},
+      {id:'P-211',aforo:10,area:'25 m²',side:'right'},
+      {id:'P-212',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-213',aforo:12,area:'31 m²',side:'right'},
+      {id:'P-214',aforo:12,area:'32 m²',side:'right'},
+      {id:'P-215',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-216',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-217',aforo:10,area:'24 m²',side:'right'},
+      {id:'P-218',aforo:10,area:'25 m²',side:'right'}
+    ]
+  },
+  ROS:null,
+  MH:null
+};
+
+const PALCO_STATUS_FILL={
+  disponible:'#22C55E',
+  negociacion:'#F59E0B',
+  reservado:'#FF7248',
+  vendido:'#EF4444'
+};
+
+let palcoVenue='CBA', palcoNivel='N1', currentPalcoId=null;
+
+function getPalcosState(){try{return JSON.parse(localStorage.getItem('dp-palcos')||'{}');}catch(e){return {};}}
+function setPalcosState(d){localStorage.setItem('dp-palcos',JSON.stringify(d));}
+function getPalcoEntry(venue,id){
+  const s=getPalcosState();
+  return (s[venue]||{})[id]||{status:'disponible',empresa:'',precio:null,fecha:'',notas:''};
+}
+
+function calcPalcoKPIs(venue){
+  const s=getPalcosState();const vs=s[venue]||{};
+  const def=PALCOS_DEF[venue];
+  if(!def) return {total:0,vendidos:0,reservados:0,negociacion:0,disponibles:0,facturacion:0};
+  let all=[];Object.values(def).forEach(function(n){all=all.concat(n);});
+  const total=all.length;
+  let vendidos=0,reservados=0,negociacion=0,facturacion=0;
+  all.forEach(function(p){
+    const e=vs[p.id]||{};const st=e.status||'disponible';
+    if(st==='vendido'){vendidos++;facturacion+=(e.precio||0);}
+    else if(st==='reservado') reservados++;
+    else if(st==='negociacion') negociacion++;
+  });
+  return {total:total,vendidos:vendidos,reservados:reservados,negociacion:negociacion,
+          disponibles:total-vendidos-reservados-negociacion,facturacion:facturacion};
+}
+
+function renderPalcosOverviewCard(){
+  const el=document.getElementById('palcos-overview-card');if(!el) return;
+  const venues=['CBA','ROS','MH'];
+  const vnames={CBA:'Arena Córdoba',ROS:'Arena Rosario',MH:'Palermo MH'};
+  let totalV=0,totalT=0,totalF=0;
+  let rows=venues.map(function(v){
+    const k=calcPalcoKPIs(v);
+    totalV+=k.vendidos;totalT+=k.total;totalF+=k.facturacion;
+    const fact=k.facturacion>0?'USD '+Math.round(k.facturacion).toLocaleString('es-AR'):'-';
+    return '<tr><td>'+venueChip(v)+'</td><td style="color:var(--red);font-weight:600">'+k.vendidos+'</td>'
+      +'<td style="color:var(--yellow)">'+(k.negociacion+k.reservados)+'</td>'
+      +'<td style="color:var(--green)">'+k.disponibles+'</td>'
+      +'<td>'+k.total+'</td>'
+      +'<td style="color:var(--accent)">'+fact+'</td></tr>';
+  }).join('');
+  const totalFact=totalF>0?'USD '+Math.round(totalF).toLocaleString('es-AR'):'-';
+  el.innerHTML='<div class="card-header">Palcos VIP <span class="card-sub">Gestión comercial de boxes</span>'
+    +'<button class="card-action" onclick="nav(\'palcos\')">Gestionar →</button></div>'
+    +'<div class="tbl-wrap"><table class="tbl">'
+    +'<thead><tr><th>Venue</th><th>Vendidos</th><th>En Neg./Res.</th><th>Disponibles</th><th>Total</th><th>Facturación</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody>'
+    +'<tfoot><tr style="border-top:2px solid var(--border)">'
+    +'<td style="font-weight:600">Total</td>'
+    +'<td style="color:var(--red);font-weight:700">'+totalV+'</td>'
+    +'<td>-</td>'
+    +'<td style="color:var(--green)">'+(totalT-totalV)+'</td>'
+    +'<td style="font-weight:600">'+totalT+'</td>'
+    +'<td style="color:var(--accent);font-weight:700">'+totalFact+'</td>'
+    +'</tr></tfoot>'
+    +'</table></div>';
+}
+
+function renderPalcosKPIs(){
+  const venues=['CBA','ROS','MH'];
+  const vnames={CBA:'Arena Córdoba',ROS:'Arena Rosario',MH:'Palermo MH'};
+  const html=venues.map(function(v){
+    const k=calcPalcoKPIs(v);
+    const pct=k.total>0?Math.round(k.disponibles/k.total*100):100;
+    const fact=k.facturacion>0?'USD '+Math.round(k.facturacion).toLocaleString('es-AR'):'-';
+    return '<div class="kpi-card">'
+      +'<div class="kpi-label" style="margin-bottom:4px">'+vnames[v]+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;">'
+      +'<div style="background:var(--surface2);border-radius:6px;padding:7px 9px;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">Vendidos</div><div style="font-size:17px;font-weight:700;font-family:var(--display);color:var(--red)">'+k.vendidos+'</div></div>'
+      +'<div style="background:var(--surface2);border-radius:6px;padding:7px 9px;"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">Disponibles</div><div style="font-size:17px;font-weight:700;font-family:var(--display);color:var(--green)">'+k.disponibles+'</div></div>'
+      +'<div style="background:var(--surface2);border-radius:6px;padding:7px 9px;"><div style="font-size:9px;color:var(--muted)">Total</div><div style="font-size:14px;font-weight:600;font-family:var(--display)">'+k.total+'</div></div>'
+      +'<div style="background:var(--surface2);border-radius:6px;padding:7px 9px;"><div style="font-size:9px;color:var(--muted)">% Disp.</div><div style="font-size:14px;font-weight:600;font-family:var(--display);color:'+(pct>50?'var(--green)':'var(--yellow)')+'">'+pct+'%</div></div>'
+      +'</div>'
+      +'<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);"><div style="font-size:9px;color:var(--muted)">Facturación</div><div style="font-size:13px;font-weight:700;font-family:var(--display);color:var(--accent)">'+fact+'</div></div>'
+      +'</div>';
+  }).join('');
+  const el=document.getElementById('palcos-kpi-row');if(el) el.innerHTML=html;
+}
+
+function renderPalcosTab(){
+  renderPalcosKPIs();
+  const def=PALCOS_DEF[palcoVenue];
+  const container=document.getElementById('palco-map-container');
+  if(!container) return;
+  const nf=document.getElementById('palcos-nivel-filter');
+  if(nf) nf.style.display=def?'flex':'none';
+  if(!def){
+    container.innerHTML='<div style="text-align:center;padding:60px 0;color:var(--muted)">'
+      +'<div style="font-size:32px;margin-bottom:12px">📏</div>'
+      +'<div style="font-family:var(--display);font-size:17px;font-weight:700;margin-bottom:6px">Planos en desarrollo</div>'
+      +'<div style="font-size:12px">Los planos de palcos de este venue están siendo preparados.</div>'
+      +'</div>';
+    return;
+  }
+  const palcos=def[palcoNivel];
+  const left=palcos.filter(function(p){return p.side==='left';});
+  const right=palcos.filter(function(p){return p.side==='right';});
+  container.innerHTML='<div class="palco-arena-wrap">'+buildArenaSVG(palcoVenue,left,right)+'</div>';
+}
+
+function buildArenaSVG(venue,leftPalcos,rightPalcos){
+  const W=720,H=482;
+  const pW=112,pH=36,pGap=4,lH=52;
+  const xL=10,xR=W-xL-pW;
+  const startY=16;
+  let lsvg='',rsvg='',y;
+  y=startY;
+  leftPalcos.forEach(function(p){
+    const h=p.tipo==='lounge'?lH:pH;
+    lsvg+=buildPalcoRect(p,xL,y,pW,h,venue);
+    y+=h+pGap;
+  });
+  y=startY;
+  rightPalcos.forEach(function(p){
+    rsvg+=buildPalcoRect(p,xR,y,pW,pH,venue);
+    y+=pH+pGap;
+  });
+  const cx=W/2,cy=232,rx=193,ry=172;
+  const vname={CBA:'ARENA CÓRDOBA',ROS:'ARENA ROSARIO',MH:'PALERMO MUSIC HALL'}[venue]||venue;
+  const vcap={CBA:'12.000 cap.',ROS:'10.000 cap.',MH:'15.000 cap.'}[venue]||'';
+  const stageW=150,stageH=44,stageX=cx-75,stageY=cy+ry-56;
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;">'
+    +'<style>.ph{cursor:pointer;opacity:.85;transition:opacity .1s,filter .1s;}.ph:hover{opacity:1;filter:brightness(1.12);}</style>'
+    +'<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="var(--surface2)" stroke="var(--border)" stroke-width="1.5"/>'
+    +'<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(rx-30)+'" ry="'+(ry-30)+'" fill="none" stroke="var(--border)" stroke-width="0.7" stroke-dasharray="3,4" opacity="0.5"/>'
+    +'<text x="'+cx+'" y="'+(cy-8)+'" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="Inter,sans-serif" letter-spacing="2">'+vname+'</text>'
+    +'<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="Inter,sans-serif">'+vcap+'</text>'
+    +'<rect x="'+stageX+'" y="'+stageY+'" width="'+stageW+'" height="'+stageH+'" rx="6" fill="rgba(255,114,72,0.1)" stroke="var(--accent)" stroke-width="1.5"/>'
+    +'<text x="'+cx+'" y="'+(stageY+stageH/2+4)+'" text-anchor="middle" fill="var(--accent)" font-size="10" font-family="Inter,sans-serif" font-weight="700" letter-spacing="2">ESCENARIO</text>'
+    +lsvg+rsvg
+    +'</svg>';
+}
+
+function buildPalcoRect(p,x,y,w,h,venue){
+  const e=getPalcoEntry(venue,p.id);
+  const status=e.status||'disponible';
+  const fill=PALCO_STATUS_FILL[status]||'#22C55E';
+  const isLounge=p.tipo==='lounge';
+  const label=p.label||p.id;
+  const sub=isLounge?p.aforo+' personas':(p.aforo+'p · '+(p.area||''));
+  const empText=e.empresa&&e.empresa.length>0
+    ?'<text x="'+(x+w/2)+'" y="'+(y+h-5)+'" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="8" font-family="Inter,sans-serif">'+e.empresa.substring(0,14)+'</text>'
+    :'';
+  const opac=status==='disponible'?'0.72':'1';
+  return '<g class="ph" onclick="openPalcoModal(\''+p.id+'\',\''+venue+'\')" opacity="'+opac+'">'
+    +'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="5" fill="'+fill+'"/>'
+    +'<text x="'+(x+w/2)+'" y="'+(y+(isLounge?17:13))+'" text-anchor="middle" fill="#fff" font-size="'+(isLounge?11:9.5)+'" font-family="Inter,sans-serif" font-weight="700">'+label+'</text>'
+    +'<text x="'+(x+w/2)+'" y="'+(y+(isLounge?31:24))+'" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8.5" font-family="Inter,sans-serif">'+sub+'</text>'
+    +empText
+    +'</g>';
+}
+
+function openPalcoModal(id,venue){
+  currentPalcoId=id;palcoVenue=venue;
+  const e=getPalcoEntry(venue,id);
+  let pdef=null;
+  const def=PALCOS_DEF[venue];
+  if(def) Object.values(def).forEach(function(n){const f=n.find(function(p){return p.id===id;});if(f) pdef=f;});
+  document.getElementById('pm-title').textContent=pdef&&pdef.label?pdef.label:id;
+  document.getElementById('pm-meta').textContent=pdef?(pdef.aforo+' personas'+(pdef.area?' · '+pdef.area:'')):'';
+  document.getElementById('pm-status').value=e.status||'disponible';
+  document.getElementById('pm-empresa').value=e.empresa||'';
+  document.getElementById('pm-precio').value=e.precio||'';
+  document.getElementById('pm-fecha').value=e.fecha||'';
+  document.getElementById('pm-notas').value=e.notas||'';
+  document.getElementById('palco-modal-overlay').style.display='flex';
+}
+
+function closePalcoModal(){
+  document.getElementById('palco-modal-overlay').style.display='none';
+  currentPalcoId=null;
+}
+
+function savePalcoModal(){
+  if(!currentPalcoId) return;
+  const s=getPalcosState();
+  if(!s[palcoVenue]) s[palcoVenue]={};
+  s[palcoVenue][currentPalcoId]={
+    status:document.getElementById('pm-status').value,
+    empresa:document.getElementById('pm-empresa').value,
+    precio:parseFloat(document.getElementById('pm-precio').value)||null,
+    fecha:document.getElementById('pm-fecha').value,
+    notas:document.getElementById('pm-notas').value
+  };
+  setPalcosState(s);
+  closePalcoModal();
+  renderPalcosTab();
+  renderPalcosOverviewCard();
+}
+
+function switchPalcoVenue(v,btn){
+  document.querySelectorAll('#palcos-venue-filter .filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  palcoVenue=v;
+  const nf=document.getElementById('palcos-nivel-filter');
+  if(nf) nf.style.display=PALCOS_DEF[v]?'flex':'none';
+  renderPalcosTab();
+}
+
+function switchPalcoNivel(n,btn){
+  document.querySelectorAll('#palcos-nivel-filter .filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  palcoNivel=n;
+  renderPalcosTab();
+}
 </script>
 
 </body>
