@@ -870,10 +870,7 @@ function renderOverview(){
   const avgAvance=DATA.venues.length?Math.round(DATA.venues.reduce((s,v)=>s+(+v.Avance||0),0)/DATA.venues.length):0;
   const hitosRiesgo=DATA.hitos.filter(h=>{const e=(h.Estado||'').toLowerCase();return e==='urgente'||e==='en riesgo';}).length;
   const pipelineTotal=DATA.deals.reduce((s,d)=>s+(d.ValorNum||parseValor(d.Valor)),0);
-  const pipelinePond=DATA.deals.reduce((s,d)=>{
-    const prob=(d.ProbNum!=null?d.ProbNum:parseFloat(d.Probabilidad)||5)/100;
-    return s+(d.ValorNum||parseValor(d.Valor))*prob;
-  },0);
+  const dealsCerradosVal=DATA.deals.filter(d=>isClosed(d.Estado)).reduce((s,d)=>s+(d.ValorNum||parseValor(d.Valor)),0);
   document.getElementById('overview-kpis').innerHTML=`
     <div class="kpi-card"><div class="kpi-label">Venues en Desarrollo</div><div class="kpi-value">${DATA.venues.length}</div><div class="kpi-sub">Under construction</div></div>
     <div class="kpi-card"><div class="kpi-label">Pipeline Total</div><div class="kpi-value" style="color:var(--accent);font-size:18px">${pipelineTotal>0?formatMonto(pipelineTotal):'-'}</div><div class="kpi-sub">${uniqueBrandsOv} marcas activas · ${total} deals</div></div>
