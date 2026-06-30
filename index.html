@@ -1257,6 +1257,36 @@ function renderVenueDetail(code){
   </div>
   <div class="detail-grid">
     <div>
+    ${(()=>{
+        const cats=[...new Set(deals.map(d=>(d.Categoria||'').trim()).filter(c=>c!==''))].sort();
+        if(!cats.length) return '';
+        const rows=cats.map(cat=>{
+          const catDeals=deals.filter(d=>(d.Categoria||'').trim()===cat);
+          const cerradosCat=catDeals.filter(d=>isClosed(d.Estado));
+          const totalMonto=catDeals.reduce((s,d)=>s+parseValor(d.Valor),0);
+          const cerradoMonto=cerradosCat.reduce((s,d)=>s+parseValor(d.Valor),0);
+          const pct=totalMonto>0?Math.round(cerradoMonto/totalMonto*100):null;
+          const pctCell=pct!==null
+            ?`<span style="color:${pct>=100?'var(--green)':pct>=60?'var(--yellow)':'var(--accent)'}">${pct}%</span>`
+            :'<span style="color:var(--muted)">-</span>';
+          return `<tr>
+            <td>${cat}</td>
+            <td style="text-align:center">${catDeals.length}</td>
+            <td>${totalMonto>0?formatMonto(totalMonto):'-'}</td>
+            <td>${cerradoMonto>0?formatMonto(cerradoMonto):'-'}</td>
+            <td>${pctCell}</td>
+          </tr>`;
+        }).join('');
+        return `<div class="card" style="margin-bottom:16px">
+          <div class="card-header">Resumen por Categoría</div>
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr><th>Tipo de Sponsor</th><th style="text-align:center">Leads</th><th>Monto Total</th><th>Cerrado</th><th>% Alcance</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table></div>
+        </div>`;
+      })()}
+      <div class="card">
+        <div class="card-header">Acuerdos Comerciales <span class="card-sub">${deals.length} registrados</span></div>
       <div class="card">
         <div class="card-header">Acuerdos Comerciales <span class="card-sub">${deals.length} registrados</span></div>
         <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Empresa</th><th>Categoria</th><th>Valor</th><th>Estado</th><th>Prox. accion</th></tr></thead>
