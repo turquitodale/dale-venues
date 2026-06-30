@@ -640,7 +640,7 @@ function showVenueDetail(code){
 // FETCH SHEETS
 // ═══════════════════════════
 async function fetchSheet(tab){
-  const url=`https://docs.google.com/spreadsheets/d/${PIPELINE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
+  const url=`https://docs.google.com/spreadsheets/d/${PIPELINE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}&headers=1`;
   const res=await fetch(url);
   const text=await res.text();
   const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
@@ -652,7 +652,7 @@ async function fetchSheet(tab){
   }).filter(r=>Object.values(r).some(v=>v!==null&&v!==''));
 }
 async function fetchPipelineSheet(){
-  const url=`https://docs.google.com/spreadsheets/d/${PIPELINE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=PIPELINE`;
+  const url=`https://docs.google.com/spreadsheets/d/${PIPELINE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=PIPELINE&headers=1`;
   const res=await fetch(url);
   const text=await res.text();
   const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
