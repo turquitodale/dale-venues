@@ -1236,7 +1236,7 @@ function renderAgenda(){
 // ═══════════════════════════
 function renderVenueDetail(code){
   const v=DATA.venues.find(x=>x.Codigo===code)||{Codigo:code,Nombre:code};
-  const deals=DATA.deals.filter(d=>d.Venue===code);
+  const deals=DATA.deals.filter(d=>d.Venue===code&&parseValor(d.Valor)>0&&parseFloat(d.Probabilidad)>0);
   const tareas=DATA.tareas.filter(t=>t.Venue===code);
   const hitos=DATA.hitos.filter(h=>h.Venue===code||h.Venue==='Todos');
   const av=+v.Avance||0;
