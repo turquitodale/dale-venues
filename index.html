@@ -552,7 +552,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
 // CONFIG
 // ═══════════════════════════
 // FUENTE ÚNICA DE DATOS — reemplazar con el ID del Google Sheet de Pipeline v2
-const PIPELINE_SHEET_ID = '15aTiW46aXH90vWgRiwj9Nlh5WYptqBaY'; // ← único ID necesario
+const PIPELINE_SHEET_ID = '1RtxEmxH2yqd8sPPM53j_0DYuTLdRf3Gr'; // ← único ID necesario
 const VENUE_MAP = {
   'Arena Córdoba':'CBA','Arena Cordoba':'CBA',
   'Arena Rosario':'ROS',
@@ -863,6 +863,8 @@ function renderAll(){
 // ═══════════════════════════
 function renderOverview(){
   const total=DATA.deals.length;
+  // Unique brands across all venues (don't triple-count multi-venue prospects)
+  const uniqueBrandsOv=[...new Set(DATA.deals.filter(d=>!isClosed(d.Estado)&&(d.Estado||'')!=='').map(d=>d.Empresa||'').filter(e=>e!==''))].length;
   const cerrados=DATA.deals.filter(d=>isClosed(d.Estado)).length;
   const pctC=total>0?Math.round(cerrados/total*100):0;
   const avgAvance=DATA.venues.length?Math.round(DATA.venues.reduce((s,v)=>s+(+v.Avance||0),0)/DATA.venues.length):0;
@@ -874,7 +876,7 @@ function renderOverview(){
   },0);
   document.getElementById('overview-kpis').innerHTML=`
     <div class="kpi-card"><div class="kpi-label">Venues en Desarrollo</div><div class="kpi-value">${DATA.venues.length}</div><div class="kpi-sub">Under construction</div></div>
-    <div class="kpi-card"><div class="kpi-label">Pipeline Total</div><div class="kpi-value" style="color:var(--accent);font-size:18px">${pipelineTotal>0?formatMonto(pipelineTotal):'-'}</div><div class="kpi-sub">${total} acuerdos activos</div></div>
+    <div class="kpi-card"><div class="kpi-label">Pipeline Total</div><div class="kpi-value" style="color:var(--accent);font-size:18px">${pipelineTotal>0?formatMonto(pipelineTotal):'-'}</div><div class="kpi-sub">${uniqueBrandsOv} marcas activas · ${total} deals</div></div>
     <div class="kpi-card"><div class="kpi-label">Pipeline Ponderado</div><div class="kpi-value" style="color:var(--green);font-size:18px">${pipelinePond>0?formatMonto(pipelinePond):'-'}</div><div class="kpi-sub">${pctC}% cerrados (${cerrados})</div></div>
   `;
   document.getElementById('venue-cards').innerHTML=DATA.venues.map(v=>{
@@ -967,13 +969,16 @@ function renderPieCharts(){
 let currentDealFilter='todos';
 function renderComercial(){
   const total=DATA.deals.length;
+  const activos=DATA.deals.filter(d=>!isClosed(d.Estado)&&(d.Estado||'')!=='').length;
+  // Unique brands: count distinct Empresa values among active deals
+  const uniqueBrands=[...new Set(DATA.deals.filter(d=>!isClosed(d.Estado)&&(d.Estado||'')!=='').map(d=>d.Empresa||'').filter(e=>e!==''))].length;
   const cerrados=DATA.deals.filter(d=>isClosed(d.Estado)).length;
   const neg=DATA.deals.filter(d=>(d.Estado||'').toLowerCase()==='negociando').length;
   const cancel=DATA.deals.filter(d=>(d.Estado||'').toLowerCase()==='cancelado').length;
-  const pct=n=>total>0?Math.round(n/total*100)+'%':'0%';
+  const pct=n=>activos>0?Math.round(n/activos*100)+'%':'0%';
   const totalFact=sumValores(DATA.deals);
   document.getElementById('comercial-kpis').innerHTML=`
-    <div class="kpi-card"><div class="kpi-label">Total Prospects</div><div class="kpi-value" style="color:var(--pulse)">${total}</div><div class="kpi-sub">acuerdos en pipeline</div></div>
+    <div class="kpi-card"><div class="kpi-label">Marcas Activas</div><div class="kpi-value" style="color:var(--pulse)">${uniqueBrands}</div><div class="kpi-sub">${activos} deals en ${total>0&&total!==activos?total+' filas':activos+' filas'} (3 venues)</div></div>
     <div class="kpi-card"><div class="kpi-label">% Cerrados</div><div class="kpi-value" style="color:var(--green)">${pct(cerrados)}</div><div class="kpi-sub">${cerrados} cerrado${cerrados!==1?'s':''}</div></div>
     <div class="kpi-card"><div class="kpi-label">% En Negociacion</div><div class="kpi-value" style="color:var(--yellow)">${pct(neg)}</div><div class="kpi-sub">${neg} en negociacion</div></div>
     <div class="kpi-card"><div class="kpi-label">Facturacion Total Est.</div><div class="kpi-value" style="color:var(--green);font-size:18px">${totalFact>0?formatMonto(totalFact):'-'}</div><div class="kpi-sub">suma del pipeline</div></div>
@@ -1300,87 +1305,6 @@ function renderVenueDetail(code){
   </div>`;
   renderCommentsVenue(code);
 }
-/* ── REPOSITORIO ─────────────────────────────────────────── */
-var DECKS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI9-8LMyr259HvMT6oNnfwbL9jrGAt2R9XKg7htnS2Lb0qibzwK2mcWrCBZ4e6kI-8/exec'; // Pegar URL del Apps Script deployment aquí
-var repoData = [];
-var repoFiltro = 'todos';
-
-function renderRepositorioTab(){
-  if(repoData.length > 0){ renderRepoGrid(); return; }
-  var grid = document.getElementById('repo-grid');
-  if(!DECKS_SCRIPT_URL){
-    grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;text-align:center;color:var(--muted)">'
-      +'<div style="font-size:14px;margin-bottom:8px">Configuración pendiente</div>'
-      +'<div style="font-size:12px">Pegá la URL del Apps Script en la constante <code>DECKS_SCRIPT_URL</code> del código.</div>'
-      +'</div>';
-    return;
-  }
-  grid.innerHTML = '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted);font-size:13px">Cargando archivos...</div>';
-  /* JSONP para evitar CORS con Apps Script */
-  var cbName = '__dpRepo' + Date.now();
-  window[cbName] = function(data){
-    delete window[cbName];
-    var old = document.getElementById('__dpRepoScript');
-    if(old) old.parentNode.removeChild(old);
-    if(!data.ok){
-      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error: '+(data.error||'sin respuesta')+'</div>';
-      return;
-    }
-    repoData = data.archivos;
-    renderRepoGrid();
-  };
-  var s = document.createElement('script');
-  s.id = '__dpRepoScript';
-  s.onerror = function(){
-    grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error al cargar. Verificá que el Apps Script esté publicado como público.</div>';
-  };
-  s.src = DECKS_SCRIPT_URL + (DECKS_SCRIPT_URL.indexOf('?')>-1?'&':'?') + 'callback=' + cbName;
-  document.head.appendChild(s);
-}
-
-function filterRepo(tipo, btn){
-  repoFiltro = tipo;
-  document.querySelectorAll('#repo-filter-bar .filter-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderRepoGrid();
-}
-
-function renderRepoGrid(){
-  var grid = document.getElementById('repo-grid');
-  var items = repoFiltro === 'todos' ? repoData : repoData.filter(function(f){ return f.tipo === repoFiltro; });
-  if(items.length === 0){
-    grid.innerHTML = '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted);font-size:13px">No hay archivos en esta categoría.</div>';
-    return;
-  }
-  grid.innerHTML = items.map(function(f){ return repoCard(f); }).join('');
-}
-
-function repoCard(f){
-  var iconMap = {
-    pdf: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
-    video: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
-    presentacion: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-    archivo: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'
-  };
-  var icon = iconMap[f.tipo] || iconMap['archivo'];
-  var fecha = new Date(f.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'});
-  var kb = f.tamanio > 1048576 ? (f.tamanio/1048576).toFixed(1)+' MB' : Math.round(f.tamanio/1024)+' KB';
-  var nombre = f.nombre.replace(/\.[^.]+$/,''); // quitar extensión del display
-  return '<a href="'+f.url+'" target="_blank" rel="noopener" style="text-decoration:none">'
-    +'<div class="card repo-card" style="padding:20px;display:flex;flex-direction:column;gap:14px;transition:transform .12s,box-shadow .12s;cursor:pointer">'
-    +'<div style="display:flex;align-items:flex-start;gap:14px">'
-    +icon
-    +'<div style="flex:1;min-width:0">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+nombre+'</div>'
-    +'<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">'+f.tipo+'</div>'
-    +'</div></div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border)">'
-    +'<span style="font-size:11px;color:var(--muted)">'+fecha+'</span>'
-    +'<span style="font-size:11px;font-family:var(--mono);color:var(--muted)">'+kb+'</span>'
-    +'</div>'
-    +'</div></a>';
-}
-
 </script>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -1609,87 +1533,6 @@ window.applyTheme = function(light){
     tileLayer.setUrl(getMapTiles());
   }
 };
-/* ── REPOSITORIO ─────────────────────────────────────────── */
-var DECKS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI9-8LMyr259HvMT6oNnfwbL9jrGAt2R9XKg7htnS2Lb0qibzwK2mcWrCBZ4e6kI-8/exec'; // Pegar URL del Apps Script deployment aquí
-var repoData = [];
-var repoFiltro = 'todos';
-
-function renderRepositorioTab(){
-  if(repoData.length > 0){ renderRepoGrid(); return; }
-  var grid = document.getElementById('repo-grid');
-  if(!DECKS_SCRIPT_URL){
-    grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;text-align:center;color:var(--muted)">'
-      +'<div style="font-size:14px;margin-bottom:8px">Configuración pendiente</div>'
-      +'<div style="font-size:12px">Pegá la URL del Apps Script en la constante <code>DECKS_SCRIPT_URL</code> del código.</div>'
-      +'</div>';
-    return;
-  }
-  grid.innerHTML = '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted);font-size:13px">Cargando archivos...</div>';
-  /* JSONP para evitar CORS con Apps Script */
-  var cbName = '__dpRepo' + Date.now();
-  window[cbName] = function(data){
-    delete window[cbName];
-    var old = document.getElementById('__dpRepoScript');
-    if(old) old.parentNode.removeChild(old);
-    if(!data.ok){
-      grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error: '+(data.error||'sin respuesta')+'</div>';
-      return;
-    }
-    repoData = data.archivos;
-    renderRepoGrid();
-  };
-  var s = document.createElement('script');
-  s.id = '__dpRepoScript';
-  s.onerror = function(){
-    grid.innerHTML = '<div class="card" style="padding:24px;grid-column:1/-1;color:var(--red)">Error al cargar. Verificá que el Apps Script esté publicado como público.</div>';
-  };
-  s.src = DECKS_SCRIPT_URL + (DECKS_SCRIPT_URL.indexOf('?')>-1?'&':'?') + 'callback=' + cbName;
-  document.head.appendChild(s);
-}
-
-function filterRepo(tipo, btn){
-  repoFiltro = tipo;
-  document.querySelectorAll('#repo-filter-bar .filter-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderRepoGrid();
-}
-
-function renderRepoGrid(){
-  var grid = document.getElementById('repo-grid');
-  var items = repoFiltro === 'todos' ? repoData : repoData.filter(function(f){ return f.tipo === repoFiltro; });
-  if(items.length === 0){
-    grid.innerHTML = '<div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted);font-size:13px">No hay archivos en esta categoría.</div>';
-    return;
-  }
-  grid.innerHTML = items.map(function(f){ return repoCard(f); }).join('');
-}
-
-function repoCard(f){
-  var iconMap = {
-    pdf: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
-    video: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
-    presentacion: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-    archivo: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'
-  };
-  var icon = iconMap[f.tipo] || iconMap['archivo'];
-  var fecha = new Date(f.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'});
-  var kb = f.tamanio > 1048576 ? (f.tamanio/1048576).toFixed(1)+' MB' : Math.round(f.tamanio/1024)+' KB';
-  var nombre = f.nombre.replace(/\.[^.]+$/,''); // quitar extensión del display
-  return '<a href="'+f.url+'" target="_blank" rel="noopener" style="text-decoration:none">'
-    +'<div class="card repo-card" style="padding:20px;display:flex;flex-direction:column;gap:14px;transition:transform .12s,box-shadow .12s;cursor:pointer">'
-    +'<div style="display:flex;align-items:flex-start;gap:14px">'
-    +icon
-    +'<div style="flex:1;min-width:0">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+nombre+'</div>'
-    +'<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">'+f.tipo+'</div>'
-    +'</div></div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border)">'
-    +'<span style="font-size:11px;color:var(--muted)">'+fecha+'</span>'
-    +'<span style="font-size:11px;font-family:var(--mono);color:var(--muted)">'+kb+'</span>'
-    +'</div>'
-    +'</div></a>';
-}
-
 </script>
 
 <script>
@@ -2067,7 +1910,7 @@ function switchPalcoNivel(n,btn){
   renderPalcosTab();
 }
 /* ── REPOSITORIO ─────────────────────────────────────────── */
-var DECKS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI9-8LMyr259HvMT6oNnfwbL9jrGAt2R9XKg7htnS2Lb0qibzwK2mcWrCBZ4e6kI-8/exec'; // Pegar URL del Apps Script deployment aquí
+var DECKS_SCRIPT_URL = ''; // Pegar URL del Apps Script deployment aquí
 var repoData = [];
 var repoFiltro = 'todos';
 
