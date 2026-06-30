@@ -874,10 +874,11 @@ function renderOverview(){
     const prob=(d.ProbNum!=null?d.ProbNum:parseFloat(d.Probabilidad)||5)/100;
     return s+(d.ValorNum||parseValor(d.Valor))*prob;
   },0);
+  const dealsCerradosVal=DATA.deals.filter(d=>isClosed(d.Estado)).reduce((s,d)=>s+(d.ValorNum||parseValor(d.Valor)),0);
   document.getElementById('overview-kpis').innerHTML=`
     <div class="kpi-card"><div class="kpi-label">Venues en Desarrollo</div><div class="kpi-value">${DATA.venues.length}</div><div class="kpi-sub">Under construction</div></div>
     <div class="kpi-card"><div class="kpi-label">Pipeline Total</div><div class="kpi-value" style="color:var(--accent);font-size:18px">${pipelineTotal>0?formatMonto(pipelineTotal):'-'}</div><div class="kpi-sub">${uniqueBrandsOv} marcas activas · ${total} deals</div></div>
-    <div class="kpi-card"><div class="kpi-label">Pipeline Ponderado</div><div class="kpi-value" style="color:var(--green);font-size:18px">${pipelinePond>0?formatMonto(pipelinePond):'-'}</div><div class="kpi-sub">${pctC}% cerrados (${cerrados})</div></div>
+    <div class="kpi-card"><div class="kpi-label">Deals Cerrados</div><div class="kpi-value" style="color:var(--green);font-size:18px">${dealsCerradosVal>0?formatMonto(dealsCerradosVal):'-'}</div><div class="kpi-sub">${cerrados} deal${cerrados!==1?'s':''} cerrado${cerrados!==1?'s':''}</div></div>
   `;
   document.getElementById('venue-cards').innerHTML=DATA.venues.map(v=>{
     const sm={'On track':'sdot-g','En obra':'sdot-y','Demora':'sdot-r'};
