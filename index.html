@@ -299,18 +299,18 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
   </div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">dale<span>.</span>venues<span class="tagline">Dale Play &middot; Venue Ops</span></div>
-    <div class="sidebar-section">General</div>
-    <button class="nav-item active" onclick="nav('overview')"><span class="icon">&#11041;</span>Overview</button>
-    <button class="nav-item" onclick="nav('comercial')"><span class="icon">&#11050;</span>Comercial</button>
-    <button class="nav-item" onclick="nav('tareas')"><span class="icon">&#9723;</span>Tareas</button>
-    <button class="nav-item" onclick="nav('calendario')"><span class="icon">&#9711;</span>Calendario</button>
-    <button class="nav-item" onclick="nav('mapa')"><span class="icon">&#9678;</span>Mapa</button>
+    <div class="sidebar-section role-hide">General</div>
+    <button class="nav-item active role-hide" onclick="nav('overview')"><span class="icon">&#11041;</span>Overview</button>
+    <button class="nav-item role-hide" onclick="nav('comercial')"><span class="icon">&#11050;</span>Comercial</button>
+    <button class="nav-item role-hide" onclick="nav('tareas')"><span class="icon">&#9723;</span>Tareas</button>
+    <button class="nav-item role-hide" onclick="nav('calendario')"><span class="icon">&#9711;</span>Calendario</button>
+    <button class="nav-item role-hide" onclick="nav('mapa')"><span class="icon">&#9678;</span>Mapa</button>
     <button class="nav-item" onclick="nav('palcos')"><span class="icon">&#9670;</span>Palcos VIP</button>
-    <button class="nav-item" onclick="nav('repositorio')"><span class="icon">&#9724;</span>Repositorio</button>
-    <div class="sidebar-section" style="margin-top:8px;">Venues</div>
-    <button class="nav-item" onclick="showVenueDetail('MH')"><span class="vdot" style="background:var(--accent)"></span>Palermo Music Hall</button>
-    <button class="nav-item" onclick="showVenueDetail('CBA')"><span class="vdot" style="background:#059669"></span>Cordoba Arena</button>
-    <button class="nav-item" onclick="showVenueDetail('ROS')"><span class="vdot" style="background:#D97706"></span>Arena Rosario</button>
+    <button class="nav-item role-hide" onclick="nav('repositorio')"><span class="icon">&#9724;</span>Repositorio</button>
+    <div class="sidebar-section role-hide" style="margin-top:8px;">Venues</div>
+    <button class="nav-item role-hide" onclick="showVenueDetail('MH')"><span class="vdot" style="background:var(--accent)"></span>Palermo Music Hall</button>
+    <button class="nav-item role-hide" onclick="showVenueDetail('CBA')"><span class="vdot" style="background:#059669"></span>Cordoba Arena</button>
+    <button class="nav-item role-hide" onclick="showVenueDetail('ROS')"><span class="vdot" style="background:#D97706"></span>Arena Rosario</button>
     <div class="sidebar-bottom">
       <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Cargando...</span></div>
       <div class="theme-toggle">
@@ -473,8 +473,8 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
       <div class="kpi-row kpi-3" id="palcos-kpi-row" style="margin-bottom:20px;"></div>
       <div class="filter-row" id="palcos-venue-filter" style="margin-bottom:10px;">
         <button class="filter-btn active" onclick="switchPalcoVenue('CBA',this)">Arena Córdoba</button>
-        <button class="filter-btn" onclick="switchPalcoVenue('ROS',this)">Arena Rosario</button>
-        <button class="filter-btn" onclick="switchPalcoVenue('MH',this)">Palermo MH</button>
+        <button class="filter-btn role-hide" onclick="switchPalcoVenue('ROS',this)">Arena Rosario</button>
+        <button class="filter-btn role-hide" onclick="switchPalcoVenue('MH',this)">Palermo MH</button>
       </div>
       <div class="filter-row" id="palcos-nivel-filter" style="margin-bottom:10px;">
         <button class="filter-btn active" onclick="switchPalcoNivel('N1',this)">Nivel 1 (P-1xx)</button>
@@ -559,11 +559,13 @@ const VENUE_MAP = {
   'Palermo Music Hall':'MH',
 };
 const PASSWORD       = 'dp26';
+const PASSWORD_CBA_VIP = 'arenacordoba'; // acceso restringido: solo Palcos VIP - Cordoba
 const CALENDAR_PROXY = 'https://script.google.com/macros/s/AKfycbzt9q8O8k1YYpLskqigPa7jO25L08kYzMfcGreHBNu1gq-9a0pg-ow7Y4l98QqjmtY/exec';
 // ═══════════════════════════
 // STATE
 // ═══════════════════════════
 let DATA = {venues:[],deals:[],tareas:[],hitos:[]};
+let ROLE = 'admin'; // 'admin' | 'cordoba-vip'
 let COMMENTS = [];
 let GCAL_EVENTS = [];
 let pieCharts = {};
@@ -593,15 +595,25 @@ function toggleTheme(){
 // ═══════════════════════════
 function doLogin(){
   const v=document.getElementById('pw-input').value;
-  if(v===PASSWORD){
+  if(v===PASSWORD || v===PASSWORD_CBA_VIP){
+    ROLE = (v===PASSWORD_CBA_VIP) ? 'cordoba-vip' : 'admin';
     document.getElementById('login-overlay').style.display='none';
     document.getElementById('app').style.display='flex';
     agendaAnchor=startOfWeek(new Date());
+    applyRoleRestrictions();
     loadAllData();
   } else {
     document.getElementById('login-error').style.display='block';
     document.getElementById('pw-input').value='';
   }
+}
+function applyRoleRestrictions(){
+  if(ROLE!=='cordoba-vip') return;
+  document.querySelectorAll('.role-hide').forEach(function(el){el.style.display='none';});
+  const sub=document.querySelector('#view-palcos .page-sub');
+  if(sub) sub.textContent='Gestión comercial de palcos · Arena Córdoba';
+  palcoVenue='CBA';
+  nav('palcos');
 }
 // ═══════════════════════════
 // SIDEBAR
@@ -1679,7 +1691,7 @@ function renderPalcosOverviewCard(){
 }
 
 function renderPalcosKPIs(){
-  const venues=['CBA','ROS','MH'];
+  const venues= ROLE==='cordoba-vip' ? ['CBA'] : ['CBA','ROS','MH'];
   const vnames={CBA:'Arena Córdoba',ROS:'Arena Rosario',MH:'Palermo MH'};
   const html=venues.map(function(v){
     const k=calcPalcoKPIs(v);
@@ -1696,7 +1708,8 @@ function renderPalcosKPIs(){
       +'<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);"><div style="font-size:9px;color:var(--muted)">Facturación</div><div style="font-size:13px;font-weight:700;font-family:var(--display);color:var(--accent)">'+fact+'</div></div>'
       +'</div>';
   }).join('');
-  const el=document.getElementById('palcos-kpi-row');if(el) el.innerHTML=html;
+  const el=document.getElementById('palcos-kpi-row');
+  if(el){el.innerHTML=html; el.style.gridTemplateColumns = venues.length===1 ? '1fr' : '';}
 }
 
 function renderPalcosTab(){
