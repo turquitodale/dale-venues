@@ -1621,7 +1621,39 @@ const PALCOS_DEF = {
       {id:'P-218',aforo:10,area:'25 m²',side:'right'}
     ]
   },
-  ROS:null,
+  ROS:{
+    N1:[
+      {id:'P01',aforo:12,area:'28 m²',side:'left'},
+      {id:'P02',aforo:12,area:'28 m²',side:'left'},
+      {id:'P03',aforo:12,area:'28 m²',side:'left'},
+      {id:'P04',aforo:12,area:'28 m²',side:'left'},
+      {id:'P05',aforo:12,area:'28 m²',side:'left'},
+      {id:'P06',aforo:12,area:'28 m²',side:'left'},
+      {id:'P07',aforo:12,area:'28 m²',side:'left'},
+      {id:'P08',aforo:12,area:'28 m²',side:'left'},
+      {id:'P09',aforo:12,area:'28 m²',side:'left'},
+      {id:'P10',aforo:12,area:'28 m²',side:'right'},
+      {id:'P11',aforo:12,area:'28 m²',side:'right'},
+      {id:'P12',aforo:12,area:'28 m²',side:'right'},
+      {id:'P13',aforo:12,area:'28 m²',side:'right'},
+      {id:'P14',aforo:12,area:'28 m²',side:'right'},
+      {id:'P15',aforo:12,area:'28 m²',side:'right'},
+      {id:'P16',aforo:12,area:'28 m²',side:'right'},
+      {id:'P17',aforo:12,area:'28 m²',side:'right'},
+      {id:'P18',aforo:12,area:'28 m²',side:'right'}
+    ],
+    N2:[
+      {id:'L-ROS-N4',label:'Lounge',aforo:120,area:null,side:'left',tipo:'lounge'},
+      {id:'P19',aforo:12,area:'25 m²',side:'left'},
+      {id:'P20',aforo:12,area:'25 m²',side:'left'},
+      {id:'P21',aforo:12,area:'25 m²',side:'left'},
+      {id:'P22',aforo:12,area:'25 m²',side:'left'},
+      {id:'P23',aforo:12,area:'25 m²',side:'right'},
+      {id:'P24',aforo:12,area:'25 m²',side:'right'},
+      {id:'P25',aforo:12,area:'25 m²',side:'right'},
+      {id:'P26',aforo:12,area:'25 m²',side:'right'}
+    ]
+  },
   MH:null
 };
 
@@ -1737,7 +1769,7 @@ function buildPalcosView(venue,leftPalcos,rightPalcos,nivel){
   /* Determines image path per venue/level */
   var imgMap={
     CBA:{N1:'plano-palcos-cba-n1.jpg',N2:'plano-palcos-cba-n2.jpg'},
-    ROS:{N1:'',N2:''},
+    ROS:{N1:'plano-palcos-ros-n1.jpg',N2:'plano-palcos-ros-n2.jpg'},
     MH:{N1:'',N2:''}
   };
   var imgSrc=(imgMap[venue]&&imgMap[venue][nivel])||'';
@@ -1932,12 +1964,21 @@ function savePalcoModal(){
   renderPalcosOverviewCard();
 }
 
+const NIVEL_LABELS={
+  CBA:{N1:'Nivel 1 (P-1xx)',N2:'Nivel 2 (P-2xx)'},
+  ROS:{N1:'Nivel 3 · Palcos',N2:'Nivel 4 · Lounge & Palcos'},
+  MH:{N1:'Nivel 1',N2:'Nivel 2'}
+};
 function switchPalcoVenue(v,btn){
   document.querySelectorAll('#palcos-venue-filter .filter-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   palcoVenue=v;
   const nf=document.getElementById('palcos-nivel-filter');
   if(nf) nf.style.display=PALCOS_DEF[v]?'flex':'none';
+  const nfBtns=nf?nf.querySelectorAll('.filter-btn'):[];
+  const lbl=NIVEL_LABELS[v]||NIVEL_LABELS.CBA;
+  if(nfBtns[0]) nfBtns[0].textContent=lbl.N1;
+  if(nfBtns[1]) nfBtns[1].textContent=lbl.N2;
   renderPalcosTab();
 }
 
