@@ -479,6 +479,7 @@ input:checked+.theme-slider:before{transform:translateX(14px);background:#fff;}
       <div class="filter-row" id="palcos-nivel-filter" style="margin-bottom:10px;">
         <button class="filter-btn active" onclick="switchPalcoNivel('N1',this)">Nivel 1 (P-1xx)</button>
         <button class="filter-btn" onclick="switchPalcoNivel('N2',this)">Nivel 2 (P-2xx)</button>
+        <button class="filter-btn" id="palco-n3-btn" style="display:none" onclick="switchPalcoNivel('N3',this)">Nivel 3</button>
       </div>
       <div style="display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
         <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary);"><span style="width:10px;height:10px;border-radius:2px;background:#22C55E;display:inline-block;flex-shrink:0;"></span>Disponible</div>
@@ -1654,7 +1655,47 @@ const PALCOS_DEF = {
       {id:'P26',aforo:12,area:'25 m²',side:'right'}
     ]
   },
-  MH:null
+  MH:{
+    N1:[
+      {id:'L-MH-N1',label:'Lounge',aforo:112,area:'100 m²',side:'left',tipo:'lounge'},
+      {id:'P19',aforo:11,area:'28 m²',side:'left'},
+      {id:'P18',aforo:12,area:'26 m²',side:'left'},
+      {id:'P17',aforo:12,area:'21 m²',side:'left'},
+      {id:'P16',aforo:12,area:'22 m²',side:'left'},
+      {id:'P15',aforo:12,area:'24 m²',side:'left'},
+      {id:'P14',aforo:11,area:'28 m²',side:'right'},
+      {id:'P13',aforo:12,area:'26 m²',side:'right'},
+      {id:'P12',aforo:12,area:'21 m²',side:'right'},
+      {id:'P11',aforo:12,area:'22 m²',side:'right'},
+      {id:'P10',aforo:12,area:'24 m²',side:'right'}
+    ],
+    N2:[
+      {id:'L-MH-N2',label:'Lounge',aforo:110,area:'100 m²',side:'left',tipo:'lounge'},
+      {id:'P29',aforo:10,area:'28 m²',side:'left'},
+      {id:'P28',aforo:9,area:'25 m²',side:'left'},
+      {id:'P27',aforo:9,area:'20 m²',side:'left'},
+      {id:'P26',aforo:9,area:'22 m²',side:'left'},
+      {id:'P25',aforo:9,area:'24 m²',side:'left'},
+      {id:'P24',aforo:10,area:'28 m²',side:'right'},
+      {id:'P23',aforo:9,area:'25 m²',side:'right'},
+      {id:'P22',aforo:9,area:'20 m²',side:'right'},
+      {id:'P21',aforo:9,area:'22 m²',side:'right'},
+      {id:'P20',aforo:9,area:'24 m²',side:'right'}
+    ],
+    N3:[
+      {id:'L-MH-N3',label:'Lounge',aforo:110,area:'100 m²',side:'left',tipo:'lounge'},
+      {id:'P39',aforo:10,area:'28 m²',side:'left'},
+      {id:'P38',aforo:8,area:'25 m²',side:'left'},
+      {id:'P37',aforo:8,area:'20 m²',side:'left'},
+      {id:'P36',aforo:8,area:'22 m²',side:'left'},
+      {id:'P35',aforo:8,area:'24 m²',side:'left'},
+      {id:'P34',aforo:10,area:'28 m²',side:'right'},
+      {id:'P33',aforo:8,area:'25 m²',side:'right'},
+      {id:'P32',aforo:8,area:'20 m²',side:'right'},
+      {id:'P31',aforo:8,area:'22 m²',side:'right'},
+      {id:'P30',aforo:8,area:'24 m²',side:'right'}
+    ]
+  }
 };
 
 const PALCO_STATUS_FILL={
@@ -1770,7 +1811,7 @@ function buildPalcosView(venue,leftPalcos,rightPalcos,nivel){
   var imgMap={
     CBA:{N1:'plano-palcos-cba-n1.jpg',N2:'plano-palcos-cba-n2.jpg'},
     ROS:{N1:'plano-palcos-ros-n1.jpg',N2:'plano-palcos-ros-n2.jpg'},
-    MH:{N1:'',N2:''}
+    MH:{N1:'plano-palcos-mh-n1.jpg',N2:'plano-palcos-mh-n2.jpg',N3:'plano-palcos-mh-n3.jpg'}
   };
   var imgSrc=(imgMap[venue]&&imgMap[venue][nivel])||'';
 
@@ -1967,7 +2008,7 @@ function savePalcoModal(){
 const NIVEL_LABELS={
   CBA:{N1:'Nivel 1 (P-1xx)',N2:'Nivel 2 (P-2xx)'},
   ROS:{N1:'Nivel 3 · Palcos',N2:'Nivel 4 · Lounge & Palcos'},
-  MH:{N1:'Nivel 1',N2:'Nivel 2'}
+  MH:{N1:'Primer Piso',N2:'Segundo Piso',N3:'Tercer Piso'}
 };
 function switchPalcoVenue(v,btn){
   document.querySelectorAll('#palcos-venue-filter .filter-btn').forEach(function(b){b.classList.remove('active');});
@@ -1975,10 +2016,21 @@ function switchPalcoVenue(v,btn){
   palcoVenue=v;
   const nf=document.getElementById('palcos-nivel-filter');
   if(nf) nf.style.display=PALCOS_DEF[v]?'flex':'none';
-  const nfBtns=nf?nf.querySelectorAll('.filter-btn'):[];
   const lbl=NIVEL_LABELS[v]||NIVEL_LABELS.CBA;
-  if(nfBtns[0]) nfBtns[0].textContent=lbl.N1;
-  if(nfBtns[1]) nfBtns[1].textContent=lbl.N2;
+  const n1Btn=nf?nf.querySelector('[onclick*="\'N1\'"]'):null;
+  const n2Btn=nf?nf.querySelector('[onclick*="\'N2\'"]'):null;
+  const n3Btn=document.getElementById('palco-n3-btn');
+  if(n1Btn) n1Btn.textContent=lbl.N1;
+  if(n2Btn) n2Btn.textContent=lbl.N2;
+  const hasN3=!!(PALCOS_DEF[v]&&PALCOS_DEF[v].N3);
+  if(n3Btn){
+    n3Btn.style.display=hasN3?'':'none';
+    if(hasN3) n3Btn.textContent=lbl.N3;
+  }
+  if(!hasN3&&palcoNivel==='N3'){
+    palcoNivel='N1';
+    if(n1Btn){ nf.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');}); n1Btn.classList.add('active'); }
+  }
   renderPalcosTab();
 }
 
