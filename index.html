@@ -677,7 +677,7 @@ async function fetchPipelineSheet(){
   }).filter(r=>r['Marca']&&(r['Etapa']||'')!=='Cerrado-Perdido');
   return rows.map(r=>{
     const venueCode=VENUE_MAP[r['Venue']]||r['Venue']||'-';
-    const monto=r['Monto p/ Dashboard']||r['Precio Lista USD']||null;
+    const monto=(r['Monto p/ Dashboard']!=null&&r['Monto p/ Dashboard']!==''&&!isNaN(Number(r['Monto p/ Dashboard'])))?Number(r['Monto p/ Dashboard']):(r['Precio Lista USD']||null);
     const probRaw=r['Probab. %']||r['Probabilidad']||null;
     const prob=probRaw!==null?Math.round(parseFloat(probRaw)*100)/100+'%':'5%';
     return {
